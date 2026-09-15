@@ -432,7 +432,11 @@
       const $ = (s) => document.querySelector(s),
         n = (x) => Math.max(0, Number(x) || 0),
         f = (x) => new Intl.NumberFormat("th-TH").format(x),
-        sg = (x) => `${x > 0 ? "+" : ""}${f(x)}`;
+        sg = (x) => `${x > 0 ? "+" : ""}${f(x)}`,
+        countPeriod = () =>
+          new Date().getHours() < 12
+            ? "ตรวจนับรอบเช้า"
+            : "ตรวจนับรอบบ่าย";
     let zone = "room",
         mode = "count",
         state = {
@@ -600,6 +604,7 @@
           const saved = JSON.parse(localStorage.getItem(KEY));
           saved ? (state = { ...state, ...saved }) : migrate();
         } catch (e) {}
+        state.countPeriod = countPeriod();
         $("#date").value = state.date;
         render();
       }
@@ -661,7 +666,7 @@
             "th-TH",
             { year: "numeric", month: "long", day: "numeric" },
           ),
-          text = `📋 สรุปตรวจนับสุรา\nวันที่: ${date}\n━━━━━━━━━━━━\n${lineDetails("room", "Stockroom")}\n━━━━━━━━━━━━\n${lineDetails("floor", "Sales Floor")}\n━━━━━━━━━━━━\n✅ ยอดรวมตรวจจริง: ${f(actual)} ขวด\n📊 ยอดในระบบ: ${f(system)} ขวด\n🛒 ยอดขาย: ${f(sales)} ขวด\n⚠️ ผลต่าง: ${sg(actual - system)} ขวด`;
+          text = `📋 สรุปตรวจนับสุรา\nรอบ: ${state.countPeriod || countPeriod()}\nวันที่: ${date}\n━━━━━━━━━━━━\n${lineDetails("room", "Stockroom")}\n━━━━━━━━━━━━\n${lineDetails("floor", "Sales Floor")}\n━━━━━━━━━━━━\n✅ ยอดรวมตรวจจริง: ${f(actual)} ขวด\n📊 ยอดในระบบ: ${f(system)} ขวด\n🛒 ยอดขาย: ${f(sales)} ขวด\n⚠️ ผลต่าง: ${sg(actual - system)} ขวด`;
         navigator.clipboard?.writeText(text);
         toast("คัดลอกสรุปแล้ว กำลังเปิด LINE");
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
