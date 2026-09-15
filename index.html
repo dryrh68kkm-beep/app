@@ -608,14 +608,26 @@
         $("#date").value = state.date;
         render();
       }
-      function lineDetails(z, title) {
-        const rows = state[z]
+      function productDetails() {
+        const products = new Map();
+        ["room", "floor"].forEach((z) =>
+          state[z].forEach((item) => {
+            const key = item.barcode || item.name;
+            if (!products.has(key))
+              products.set(key, {
+                name: item.name,
+                room: 0,
+                floor: 0,
+              });
+            products.get(key)[z] += physical(item);
+          }),
+        );
+        return [...products.values()]
           .map(
-            (x) =>
-              `• ${x.name}\n  ระบบ ${f(n(x.system))} | ขาย ${f(sold(x))} | ตรวจจริง ${f(physical(x))} | ต่าง ${sg(physical(x) - n(x.system))} ขวด`,
+            (item) =>
+              `• ${item.name}\n  Stockroom ${f(item.room)} | Sales Floor ${f(item.floor)} | รวม ${f(item.room + item.floor)} ขวด`,
           )
           .join("\n");
-        return `🏪 ${title}\n${rows}\nรวมตรวจจริง ${f(sum(z, physical))} | ระบบ ${f(sum(z, (x) => n(x.system)))} | ขาย ${f(sum(z, sold))} ขวด`;
       }
       document.querySelectorAll("[data-zone]").forEach((b) =>
         b.addEventListener("click", () => {
@@ -666,7 +678,7 @@
             "th-TH",
             { year: "numeric", month: "long", day: "numeric" },
           ),
-          text = `📋 สรุปตรวจนับสุรา\nรอบ: ${state.countPeriod || countPeriod()}\nวันที่: ${date}\n━━━━━━━━━━━━\n${lineDetails("room", "Stockroom")}\n━━━━━━━━━━━━\n${lineDetails("floor", "Sales Floor")}\n━━━━━━━━━━━━\n✅ ยอดรวมตรวจจริง: ${f(actual)} ขวด\n📊 ยอดในระบบ: ${f(system)} ขวด\n🛒 ยอดขาย: ${f(sales)} ขวด\n⚠️ ผลต่าง: ${sg(actual - system)} ขวด`;
+          text = `📋 สรุปตรวจนับสุรา\nรอบ: ${state.countPeriod || countPeriod()} | วันที่: ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n✅ รวมตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\n🛒 ยอดขาย ${f(sales)} ขวด | ผลต่าง ${sg(actual - system)} ขวด`;
         navigator.clipboard?.writeText(text);
         toast("คัดลอกสรุปแล้ว กำลังเปิด LINE");
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
