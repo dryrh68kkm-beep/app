@@ -618,14 +618,19 @@
                 name: item.name,
                 room: 0,
                 floor: 0,
+                system: 0,
               });
-            products.get(key)[z] += physical(item);
+            const product = products.get(key);
+            product[z] += physical(item);
+            product.system += n(item.system);
           }),
         );
         return [...products.values()]
           .map(
-            (item) =>
-              `• ${item.name}\n  Stockroom ${f(item.room)} | Sales Floor ${f(item.floor)} | รวม ${f(item.room + item.floor)} ขวด`,
+            (item) => {
+              const actual = item.room + item.floor;
+              return `• ${item.name}\n  Stockroom ${f(item.room)} | Sales Floor ${f(item.floor)} | รวม ${f(actual)} ขวด\n  ระบบ ${f(item.system)} | ผลต่าง ${sg(actual - item.system)} ขวด`;
+            },
           )
           .join("\n");
       }
