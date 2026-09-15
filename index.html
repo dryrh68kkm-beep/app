@@ -699,7 +699,7 @@
             "th-TH",
             { year: "numeric", month: "long", day: "numeric" },
           ),
-          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${saleBreakdown(salesCases, salesBottles)}\nผลต่างสุทธิ (ตรวจ+ขายลัง−ระบบ) ${sg(netDifference)} ขวด\nหมายเหตุ: ขายขวดถูกตัดจากระบบแล้ว`;
+          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${saleBreakdown(salesCases, salesBottles)}\nผลต่างสุทธิ (ตรวจ+ขายลัง−ระบบ) ${sg(netDifference)} ขวด`;
         navigator.clipboard?.writeText(text);
         toast("คัดลอกสรุปแล้ว กำลังเปิด LINE");
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
