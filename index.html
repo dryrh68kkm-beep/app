@@ -433,6 +433,10 @@
         n = (x) => Math.max(0, Number(x) || 0),
         f = (x) => new Intl.NumberFormat("th-TH").format(x),
         sg = (x) => `${x > 0 ? "+" : ""}${f(x)}`,
+        saleBreakdown = (total) => {
+          const bottles = n(total);
+          return `${f(Math.floor(bottles / CASE))} ลัง ${f(bottles % CASE)} ขวด (${f(bottles)} ขวด)`;
+        },
         countPeriod = () =>
           new Date().getHours() < 12
             ? "ตรวจนับรอบเช้า"
@@ -619,17 +623,20 @@
                 room: 0,
                 floor: 0,
                 system: 0,
+                sales: 0,
               });
             const product = products.get(key);
             product[z] += physical(item);
             product.system += n(item.system);
+            product.sales += sold(item);
           }),
         );
         return [...products.values()]
           .map(
             (item) => {
               const actual = item.room + item.floor;
-              return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  รวม ${f(actual)} | ระบบ ${f(item.system)} | ต่าง ${sg(actual - item.system)} ขวด`;
+              const netDifference = actual + item.sales - item.system;
+              return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.sales)}\n  ระบบ ${f(item.system)} | ตรวจ+ขาย ${f(actual + item.sales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
             },
           )
           .join("\n\n");
@@ -679,11 +686,12 @@
           actual = floor + room,
           system = all((x) => n(x.system)),
           sales = all(sold),
+          netDifference = actual + sales - system,
           date = new Date(`${state.date}T00:00:00`).toLocaleDateString(
             "th-TH",
             { year: "numeric", month: "long", day: "numeric" },
           ),
-          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${f(sales)} ขวด | ผลต่าง ${sg(actual - system)} ขวด`;
+          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${saleBreakdown(sales)}\nผลต่างสุทธิ (ตรวจ+ขาย−ระบบ) ${sg(netDifference)} ขวด`;
         navigator.clipboard?.writeText(text);
         toast("คัดลอกสรุปแล้ว กำลังเปิด LINE");
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
