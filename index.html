@@ -388,9 +388,6 @@
             <span>ผลต่าง ตรวจจริง − ระบบ</span><strong id="diff">0 ขวด</strong>
           </div>
           <div class="s-card">
-            <span>รวมสินค้า Sales Floor</span><strong id="floor">0 ขวด</strong>
-          </div>
-          <div class="s-card">
             <span>รวมสินค้า Stockroom</span><strong id="room">0 ขวด</strong>
           </div>
         </div>
@@ -579,7 +576,6 @@
         $("#diff").textContent = `${sg(diff)} ขวด`;
         $("#diffBox").className =
           `s-card ${diff > 0 ? "plus" : diff < 0 ? "minus" : ""}`;
-        $("#floor").textContent = `${f(floor)} ขวด`;
         $("#room").textContent = `${f(room)} ขวด`;
         save();
       }
