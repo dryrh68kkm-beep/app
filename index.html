@@ -1,13 +1,674 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#126b52"><title>ตรวจนับสุรา</title><style>
-:root{--g:#126b52;--d:#103d32;--bg:#f3f7f5;--line:#dbe9e2;--ink:#172c25;--muted:#71847c;--soft:#eaf6ef;--red:#b34242}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai","Sarabun",system-ui,sans-serif}.app{max-width:760px;margin:auto;padding:16px 14px 46px}header{padding:20px;border-radius:21px;color:#fff;background:linear-gradient(135deg,#0d3c30,#187157)}.eyebrow{margin:0 0 4px;font-size:11px;opacity:.75;letter-spacing:.12em;font-weight:800}h1{margin:0;font-size:27px}.sub{margin:5px 0 0;color:#d7eee4;font-size:13px}.date{display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding:9px 11px;border:1px solid #ffffff32;border-radius:11px;background:#ffffff12;font-size:13px}.date input{max-width:150px;border:0;outline:0;color:#fff;background:transparent;font:inherit;text-align:right;color-scheme:dark}.zone-tabs,.mode-tabs{display:grid;gap:8px}.zone-tabs{grid-template-columns:1fr 1fr;margin:13px 0 10px}.mode-tabs{grid-template-columns:repeat(4,1fr);margin-bottom:12px;overflow:auto}.tab{min-height:45px;border:1px solid var(--line);border-radius:12px;background:#fff;color:#5b756b;font:inherit;font-size:13px;font-weight:800}.zone-tabs .tab.active,.mode-tabs .tab.active{color:#fff;background:var(--g);border-color:var(--g);box-shadow:0 6px 13px #126b5228}.mode-tabs .tab{min-width:86px;font-size:11px}.zone-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}.zone-total span{font-size:13px;color:var(--muted)}.zone-total strong{font-size:19px;color:var(--g)}.list{display:grid;gap:9px}.card{padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 4px 12px #204e3d08}.top{display:flex;justify-content:space-between;gap:10px}.name{font-size:15px;font-weight:800;line-height:1.3}.barcode{margin-top:3px;color:var(--muted);font-size:11px}.badge{padding:5px 8px;height:max-content;border-radius:9px;color:#166044;background:var(--soft);font-size:12px;font-weight:800}.entry{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.entry.one{grid-template-columns:1fr}.field{padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:#fbfdfc}.field label{display:block;color:var(--muted);font-size:11px;font-weight:700}.field input{width:100%;height:34px;border:0;outline:0;background:transparent;color:var(--ink);font:800 22px system-ui;text-align:center}.overview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.metric{padding:9px 10px;border-radius:11px;background:#f5f9f7}.metric span{display:block;color:var(--muted);font-size:10px;font-weight:700}.metric strong{display:block;margin-top:3px;font-size:16px}.metric.diff.plus strong{color:#087047}.metric.diff.minus strong{color:var(--red)}.summary{margin-top:17px;padding:18px;border-radius:20px;color:#fff;background:linear-gradient(130deg,#103f33,#197056)}.summary h2{margin:0;font-size:19px}.summary p{margin:4px 0 13px;color:#c9e5da;font-size:13px}.total{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:1px solid #ffffff30}.total span{font-size:13px;color:#cce6db}.total strong{font-size:28px}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.s-card{padding:11px;border:1px solid #ffffff2b;border-radius:12px;background:#ffffff12}.s-card span{display:block;color:#cce6db;font-size:11px}.s-card strong{display:block;margin-top:3px;font-size:20px}.s-card.plus strong{color:#a8f0c9}.s-card.minus strong{color:#ffc7c0}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}.actions button{min-height:46px;border:0;border-radius:12px;font:800 14px inherit}.clear{color:#255b49;background:#fff}.line{color:#fff;background:#06c755}.add{width:100%;margin-top:10px;padding:12px;border:1px dashed #9cc6b4;border-radius:13px;color:#176148;background:#f8fcfa;font:800 14px inherit}.toast{position:fixed;left:50%;bottom:22px;z-index:3;display:none;padding:10px 15px;border-radius:99px;color:#fff;background:#1b3229;transform:translateX(-50%);font-size:13px;font-weight:700;white-space:nowrap}.toast.show{display:block}@media(min-width:640px){.app{padding-top:26px}.list{grid-template-columns:1fr 1fr}.zone-total,.summary{grid-column:1/-1}}
-</style></head><body><main class="app"><header><p class="eyebrow">LIQUOR STOCK COUNT</p><h1>ตรวจนับสุรา</h1><p class="sub">กรอกข้อมูลแยกเป็นชนิด เพื่อใช้งานบนมือถือได้ง่าย</p><div class="date"><span>วันที่ตรวจนับ</span><input id="date" type="date"></div></header><nav class="zone-tabs"><button class="tab active" data-zone="floor">Sales Floor</button><button class="tab" data-zone="room">Stockroom</button></nav><nav class="mode-tabs"><button class="tab active" data-mode="count">ตรวจนับ</button><button class="tab" data-mode="system">ยอดในระบบ</button><button class="tab" data-mode="sales">ยอดขาย</button><button class="tab" data-mode="total">ยอดรวม</button></nav><section id="work"><div class="zone-total"><span id="zoneLabel">ยอดตรวจจริง Sales Floor</span><strong id="zoneTotal">0 ขวด</strong></div><div id="list" class="list"></div><button id="add" class="add">+ เพิ่มสินค้า</button></section><section class="summary"><h2>สรุปยอดทั้งหมด</h2><p>รวม Sales Floor และ Stockroom</p><div class="total"><span>ยอดตรวจจริงรวม</span><strong id="actual">0 ขวด</strong></div><div class="summary-grid"><div class="s-card"><span>ยอดในระบบ</span><strong id="system">0 ขวด</strong></div><div class="s-card"><span>ยอดขาย</span><strong id="sales">0 ขวด</strong></div><div id="diffBox" class="s-card"><span>ผลต่าง ตรวจจริง − ระบบ</span><strong id="diff">0 ขวด</strong></div><div class="s-card"><span>รวมสินค้า Sales Floor</span><strong id="floor">0 ขวด</strong></div><div class="s-card"><span>รวมสินค้า Stockroom</span><strong id="room">0 ขวด</strong></div></div><div class="actions"><button class="clear" id="reset">ล้างยอดที่กรอก</button><button class="line" id="line">ส่งสรุปผ่าน LINE</button></div></section></main><div id="toast" class="toast"></div><template id="card"><article class="card"><div class="top"><div><div class="name"></div><div class="barcode"></div></div><div class="badge"></div></div><div class="entry"></div><div class="overview"></div></article></template><script>
-const CASE=12,KEY='liquor-count-categories-v3',OLD='liquor-count-v1',MASTER=[['หงส์ทอง 35 ดีกรี 350 ซีซี','8852388000620'],['แสงโสมเหรียญทอง 700 ซีซี','8851707000181'],['แสงโสม 200 มล.','8851707000198'],['แสงโสมเหรียญทอง 300 ซีซี','8851707000174'],['หงส์ทอง 35 ดีกรี 700 ซีซี','8852388000613'],['หงส์ทอง 200 มล.','8852388000767']].map(([name,barcode])=>({name,barcode,countCases:0,countBottles:0,system:0,salesCases:0,salesBottles:0}));const $=s=>document.querySelector(s),n=x=>Math.max(0,Number(x)||0),f=x=>new Intl.NumberFormat('th-TH').format(x),sg=x=>`${x>0?'+':''}${f(x)}`;let zone='floor',mode='count',state={date:new Date().toISOString().slice(0,10),floor:structuredClone(MASTER),room:structuredClone(MASTER)};
-const physical=x=>n(x.countCases)*CASE+n(x.countBottles),sold=x=>n(x.salesCases)*CASE+n(x.salesBottles),sum=(z,key)=>state[z].reduce((a,x)=>a+key(x),0),all=key=>sum('floor',key)+sum('room',key),save=()=>localStorage.setItem(KEY,JSON.stringify(state));
-function migrate(){let old;try{old=JSON.parse(localStorage.getItem(OLD))}catch(e){}if(!old)return;[['front','floor'],['back','room']].forEach(([from,to])=>{if(Array.isArray(old[from])&&old[from].length)state[to]=old[from].map(x=>({name:x.product||'ไม่ระบุสินค้า',barcode:x.barcode||'',countCases:n(x.cases),countBottles:n(x.bottles),system:n(x.system),salesCases:n(x.soldCases),salesBottles:n(x.soldBottles)}))});state.date=old.date||state.date}
-function field(label,value,change){const wrap=document.createElement('div');wrap.className='field';const lab=document.createElement('label');lab.textContent=label;const input=document.createElement('input');input.type='number';input.min='0';input.inputMode='numeric';input.value=value;input.addEventListener('input',e=>{change(n(e.target.value));update()});wrap.append(lab,input);return wrap}
-function metrics(item){const d=physical(item)-n(item.system);return [['ยอดในระบบ',`${f(n(item.system))} ขวด`],['ยอดขาย',`${f(sold(item))} ขวด`],['ตรวจจริง',`${f(physical(item))} ขวด`],['ผลต่าง',`${sg(d)} ขวด`,d]].map(([a,b,d])=>`<div class="metric diff ${d>0?'plus':d<0?'minus':''}"><span>${a}</span><strong>${b}</strong></div>`).join('')}
-function render(){const list=$('#list');list.innerHTML='';state[zone].forEach((item,i)=>{const card=$('#card').content.firstElementChild.cloneNode(true);card.querySelector('.name').textContent=item.name;card.querySelector('.barcode').textContent=item.barcode||'ไม่มีบาร์โค้ด';const badge=card.querySelector('.badge'),entry=card.querySelector('.entry'),overview=card.querySelector('.overview');if(mode==='count'){badge.textContent=`${f(physical(item))} ขวด`;entry.append(field('จำนวนลัง',item.countCases,v=>item.countCases=v),field('จำนวนขวด',item.countBottles,v=>item.countBottles=v))}if(mode==='system'){badge.textContent=`${f(n(item.system))} ขวด`;entry.className='entry one';entry.append(field('ยอดในระบบ (ขวด)',item.system,v=>item.system=v))}if(mode==='sales'){badge.textContent=`${f(sold(item))} ขวด`;entry.append(field('ขายไป (ลัง)',item.salesCases,v=>item.salesCases=v),field('ขายไป (ขวด)',item.salesBottles,v=>item.salesBottles=v))}if(mode==='total'){badge.textContent=`${f(physical(item))} ขวด`;overview.innerHTML=metrics(item)}list.append(card)});$('#zoneLabel').textContent=`${mode==='system'?'ยอดในระบบ':mode==='sales'?'ยอดขาย':mode==='total'?'ยอดตรวจจริง':'ยอดตรวจจริง'} ${zone==='floor'?'Sales Floor':'Stockroom'}`;$('#zoneTotal').textContent=`${f(sum(zone,mode==='system'?x=>n(x.system):mode==='sales'?sold:physical))} ขวด`;$('#add').style.display=mode==='total'?'none':'block';update()}
-function update(){const floor=sum('floor',physical),room=sum('room',physical),actual=floor+room,system=all(x=>n(x.system)),sales=all(sold),diff=actual-system;$('#actual').textContent=`${f(actual)} ขวด`;$('#system').textContent=`${f(system)} ขวด`;$('#sales').textContent=`${f(sales)} ขวด`;$('#diff').textContent=`${sg(diff)} ขวด`;$('#diffBox').className=`s-card ${diff>0?'plus':diff<0?'minus':''}`;$('#floor').textContent=`${f(floor)} ขวด`;$('#room').textContent=`${f(room)} ขวด`;save()}
-function toast(t){$('#toast').textContent=t;$('#toast').classList.add('show');setTimeout(()=>$('#toast').classList.remove('show'),2200)}function add(){const name=prompt('ชื่อสินค้า');if(!name)return;const barcode=prompt('บาร์โค้ด (เว้นว่างได้)')||'';state[zone].push({name,barcode,countCases:0,countBottles:0,system:0,salesCases:0,salesBottles:0});render()}
-function load(){try{const saved=JSON.parse(localStorage.getItem(KEY));saved?state={...state,...saved}:migrate()}catch(e){}$('#date').value=state.date;render()}function lineDetails(z,title){const rows=state[z].map(x=>`• ${x.name}\n  ระบบ ${f(n(x.system))} | ขาย ${f(sold(x))} | ตรวจจริง ${f(physical(x))} | ต่าง ${sg(physical(x)-n(x.system))} ขวด`).join('\n');return `🏪 ${title}\n${rows}\nรวมตรวจจริง ${f(sum(z,physical))} | ระบบ ${f(sum(z,x=>n(x.system)))} | ขาย ${f(sum(z,sold))} ขวด`}document.querySelectorAll('[data-zone]').forEach(b=>b.addEventListener('click',()=>{zone=b.dataset.zone;document.querySelectorAll('[data-zone]').forEach(x=>x.classList.toggle('active',x===b));render()}));document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b));render()}));$('#date').addEventListener('input',e=>{state.date=e.target.value;save()});$('#add').addEventListener('click',add);$('#reset').addEventListener('click',()=>{if(!confirm('ล้างตัวเลขทั้งหมดใช่หรือไม่?'))return;['floor','room'].forEach(z=>state[z].forEach(x=>Object.assign(x,{countCases:0,countBottles:0,system:0,salesCases:0,salesBottles:0})));render();toast('ล้างข้อมูลแล้ว')});$('#line').addEventListener('click',()=>{const floor=sum('floor',physical),room=sum('room',physical),actual=floor+room,system=all(x=>n(x.system)),sales=all(sold),date=new Date(`${state.date}T00:00:00`).toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'}),text=`📋 สรุปตรวจนับสุรา\nวันที่: ${date}\n━━━━━━━━━━━━\n${lineDetails('floor','Sales Floor')}\n━━━━━━━━━━━━\n${lineDetails('room','Stockroom')}\n━━━━━━━━━━━━\n✅ ยอดรวมตรวจจริง: ${f(actual)} ขวด\n📊 ยอดในระบบ: ${f(system)} ขวด\n🛒 ยอดขาย: ${f(sales)} ขวด\n⚠️ ผลต่าง: ${sg(actual-system)} ขวด`;navigator.clipboard?.writeText(text);toast('คัดลอกสรุปแล้ว กำลังเปิด LINE');window.location.href=`https://line.me/R/msg/text/?${encodeURIComponent(text)}`});load();
-</script></body></html>
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#126b52" />
+    <title>ตรวจนับสุรา</title>
+    <style>
+      :root {
+        --g: #126b52;
+        --d: #103d32;
+        --bg: #f3f7f5;
+        --line: #dbe9e2;
+        --ink: #172c25;
+        --muted: #71847c;
+        --soft: #eaf6ef;
+        --red: #b34242;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Noto Sans Thai", "Sarabun", system-ui, sans-serif;
+      }
+      .app {
+        max-width: 760px;
+        margin: auto;
+        padding: 16px 14px 46px;
+      }
+      header {
+        padding: 20px;
+        border-radius: 21px;
+        color: #fff;
+        background: linear-gradient(135deg, #0d3c30, #187157);
+      }
+      .eyebrow {
+        margin: 0 0 4px;
+        font-size: 11px;
+        opacity: 0.75;
+        letter-spacing: 0.12em;
+        font-weight: 800;
+      }
+      h1 {
+        margin: 0;
+        font-size: 27px;
+      }
+      .sub {
+        margin: 5px 0 0;
+        color: #d7eee4;
+        font-size: 13px;
+      }
+      .date {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+        padding: 9px 11px;
+        border: 1px solid #ffffff32;
+        border-radius: 11px;
+        background: #ffffff12;
+        font-size: 13px;
+      }
+      .date input {
+        max-width: 150px;
+        border: 0;
+        outline: 0;
+        color: #fff;
+        background: transparent;
+        font: inherit;
+        text-align: right;
+        color-scheme: dark;
+      }
+      .zone-tabs,
+      .mode-tabs {
+        display: grid;
+        gap: 8px;
+      }
+      .zone-tabs {
+        grid-template-columns: 1fr 1fr;
+        margin: 13px 0 10px;
+      }
+      .mode-tabs {
+        grid-template-columns: repeat(4, 1fr);
+        margin-bottom: 12px;
+        overflow: auto;
+      }
+      .tab {
+        min-height: 45px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        color: #5b756b;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+      }
+      .zone-tabs .tab.active,
+      .mode-tabs .tab.active {
+        color: #fff;
+        background: var(--g);
+        border-color: var(--g);
+        box-shadow: 0 6px 13px #126b5228;
+      }
+      .mode-tabs .tab {
+        min-width: 86px;
+        font-size: 11px;
+      }
+      .zone-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+      .zone-total span {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .zone-total strong {
+        font-size: 19px;
+        color: var(--g);
+      }
+      .list {
+        display: grid;
+        gap: 9px;
+      }
+      .card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 4px 12px #204e3d08;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .name {
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.3;
+      }
+      .barcode {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .badge {
+        padding: 5px 8px;
+        height: max-content;
+        border-radius: 9px;
+        color: #166044;
+        background: var(--soft);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .entry {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+        margin-top: 12px;
+      }
+      .entry.one {
+        grid-template-columns: 1fr;
+      }
+      .field {
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: #fbfdfc;
+      }
+      .field label {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .field input {
+        width: 100%;
+        height: 34px;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--ink);
+        font: 800 22px system-ui;
+        text-align: center;
+      }
+      .overview {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .metric {
+        padding: 9px 10px;
+        border-radius: 11px;
+        background: #f5f9f7;
+      }
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .metric strong {
+        display: block;
+        margin-top: 3px;
+        font-size: 16px;
+      }
+      .metric.diff.plus strong {
+        color: #087047;
+      }
+      .metric.diff.minus strong {
+        color: var(--red);
+      }
+      .summary {
+        margin-top: 17px;
+        padding: 18px;
+        border-radius: 20px;
+        color: #fff;
+        background: linear-gradient(130deg, #103f33, #197056);
+      }
+      .summary h2 {
+        margin: 0;
+        font-size: 19px;
+      }
+      .summary p {
+        margin: 4px 0 13px;
+        color: #c9e5da;
+        font-size: 13px;
+      }
+      .total {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #ffffff30;
+      }
+      .total span {
+        font-size: 13px;
+        color: #cce6db;
+      }
+      .total strong {
+        font-size: 28px;
+      }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+        margin-top: 12px;
+      }
+      .s-card {
+        padding: 11px;
+        border: 1px solid #ffffff2b;
+        border-radius: 12px;
+        background: #ffffff12;
+      }
+      .s-card span {
+        display: block;
+        color: #cce6db;
+        font-size: 11px;
+      }
+      .s-card strong {
+        display: block;
+        margin-top: 3px;
+        font-size: 20px;
+      }
+      .s-card.plus strong {
+        color: #a8f0c9;
+      }
+      .s-card.minus strong {
+        color: #ffc7c0;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+        margin-top: 13px;
+      }
+      .actions button {
+        min-height: 46px;
+        border: 0;
+        border-radius: 12px;
+        font: 800 14px inherit;
+      }
+      .clear {
+        color: #255b49;
+        background: #fff;
+      }
+      .line {
+        color: #fff;
+        background: #06c755;
+      }
+      .add {
+        width: 100%;
+        margin-top: 10px;
+        padding: 12px;
+        border: 1px dashed #9cc6b4;
+        border-radius: 13px;
+        color: #176148;
+        background: #f8fcfa;
+        font: 800 14px inherit;
+      }
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 3;
+        display: none;
+        padding: 10px 15px;
+        border-radius: 99px;
+        color: #fff;
+        background: #1b3229;
+        transform: translateX(-50%);
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .toast.show {
+        display: block;
+      }
+      @media (min-width: 640px) {
+        .app {
+          padding-top: 26px;
+        }
+        .list {
+          grid-template-columns: 1fr 1fr;
+        }
+        .zone-total,
+        .summary {
+          grid-column: 1/-1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <p class="eyebrow">LIQUOR STOCK COUNT</p>
+        <h1>ตรวจนับสุรา</h1>
+        <p class="sub">กรอกข้อมูลแยกเป็นชนิด เพื่อใช้งานบนมือถือได้ง่าย</p>
+        <div class="date">
+          <span>วันที่ตรวจนับ</span><input id="date" type="date" />
+        </div>
+      </header>
+      <nav class="zone-tabs">
+        <button class="tab active" data-zone="room">Stockroom</button
+        ><button class="tab" data-zone="floor">Sales Floor</button>
+      </nav>
+      <nav class="mode-tabs">
+        <button class="tab active" data-mode="count">ตรวจนับ</button
+        ><button class="tab" data-mode="system">ยอดในระบบ</button
+        ><button class="tab" data-mode="sales">ยอดขาย</button
+        ><button class="tab" data-mode="total">ยอดรวม</button>
+      </nav>
+      <section id="work">
+        <div class="zone-total">
+        <span id="zoneLabel">ยอดตรวจจริง Stockroom</span
+          ><strong id="zoneTotal">0 ขวด</strong>
+        </div>
+        <div id="list" class="list"></div>
+        <button id="add" class="add">+ เพิ่มสินค้า</button>
+      </section>
+      <section class="summary">
+        <h2>สรุปยอดทั้งหมด</h2>
+        <p>รวม Sales Floor และ Stockroom</p>
+        <div class="total">
+          <span>ยอดตรวจจริงรวม</span><strong id="actual">0 ขวด</strong>
+        </div>
+        <div class="summary-grid">
+          <div class="s-card">
+            <span>ยอดในระบบ</span><strong id="system">0 ขวด</strong>
+          </div>
+          <div class="s-card">
+            <span>ยอดขาย</span><strong id="sales">0 ขวด</strong>
+          </div>
+          <div id="diffBox" class="s-card">
+            <span>ผลต่าง ตรวจจริง − ระบบ</span><strong id="diff">0 ขวด</strong>
+          </div>
+          <div class="s-card">
+            <span>รวมสินค้า Sales Floor</span><strong id="floor">0 ขวด</strong>
+          </div>
+          <div class="s-card">
+            <span>รวมสินค้า Stockroom</span><strong id="room">0 ขวด</strong>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="clear" id="reset">ล้างยอดที่กรอก</button
+          ><button class="line" id="line">ส่งสรุปผ่าน LINE</button>
+        </div>
+      </section>
+    </main>
+    <div id="toast" class="toast"></div>
+    <template id="card"
+      ><article class="card">
+        <div class="top">
+          <div>
+            <div class="name"></div>
+            <div class="barcode"></div>
+          </div>
+          <div class="badge"></div>
+        </div>
+        <div class="entry"></div>
+        <div class="overview"></div></article
+    ></template>
+    <script>
+      const CASE = 12,
+        KEY = "liquor-count-categories-v3",
+        OLD = "liquor-count-v1",
+        MASTER = [
+          ["หงส์ทอง 35 ดีกรี 350 ซีซี", "8852388000620"],
+          ["แสงโสมเหรียญทอง 700 ซีซี", "8851707000181"],
+          ["แสงโสม 200 มล.", "8851707000198"],
+          ["แสงโสมเหรียญทอง 300 ซีซี", "8851707000174"],
+          ["หงส์ทอง 35 ดีกรี 700 ซีซี", "8852388000613"],
+          ["หงส์ทอง 200 มล.", "8852388000767"],
+        ].map(([name, barcode]) => ({
+          name,
+          barcode,
+          countCases: 0,
+          countBottles: 0,
+          system: 0,
+          salesCases: 0,
+          salesBottles: 0,
+        }));
+      const $ = (s) => document.querySelector(s),
+        n = (x) => Math.max(0, Number(x) || 0),
+        f = (x) => new Intl.NumberFormat("th-TH").format(x),
+        sg = (x) => `${x > 0 ? "+" : ""}${f(x)}`;
+    let zone = "room",
+        mode = "count",
+        state = {
+          date: new Date().toISOString().slice(0, 10),
+          floor: structuredClone(MASTER),
+          room: structuredClone(MASTER),
+        };
+      const physical = (x) => n(x.countCases) * CASE + n(x.countBottles),
+        sold = (x) => n(x.salesCases) * CASE + n(x.salesBottles),
+        sum = (z, key) => state[z].reduce((a, x) => a + key(x), 0),
+        all = (key) => sum("floor", key) + sum("room", key),
+        save = () => localStorage.setItem(KEY, JSON.stringify(state));
+      function migrate() {
+        let old;
+        try {
+          old = JSON.parse(localStorage.getItem(OLD));
+        } catch (e) {}
+        if (!old) return;
+        [
+          ["front", "floor"],
+          ["back", "room"],
+        ].forEach(([from, to]) => {
+          if (Array.isArray(old[from]) && old[from].length)
+            state[to] = old[from].map((x) => ({
+              name: x.product || "ไม่ระบุสินค้า",
+              barcode: x.barcode || "",
+              countCases: n(x.cases),
+              countBottles: n(x.bottles),
+              system: n(x.system),
+              salesCases: n(x.soldCases),
+              salesBottles: n(x.soldBottles),
+            }));
+        });
+        state.date = old.date || state.date;
+      }
+      function field(label, value, change) {
+        const wrap = document.createElement("div");
+        wrap.className = "field";
+        const lab = document.createElement("label");
+        lab.textContent = label;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.inputMode = "numeric";
+        input.value = value;
+        input.addEventListener("input", (e) => {
+          change(n(e.target.value));
+          update();
+        });
+        wrap.append(lab, input);
+        return wrap;
+      }
+      function metrics(item) {
+        const d = physical(item) - n(item.system);
+        return [
+          ["ยอดในระบบ", `${f(n(item.system))} ขวด`],
+          ["ยอดขาย", `${f(sold(item))} ขวด`],
+          ["ตรวจจริง", `${f(physical(item))} ขวด`],
+          ["ผลต่าง", `${sg(d)} ขวด`, d],
+        ]
+          .map(
+            ([a, b, d]) =>
+              `<div class="metric diff ${d > 0 ? "plus" : d < 0 ? "minus" : ""}"><span>${a}</span><strong>${b}</strong></div>`,
+          )
+          .join("");
+      }
+      function render() {
+        const list = $("#list");
+        list.innerHTML = "";
+        state[zone].forEach((item, i) => {
+          const card = $("#card").content.firstElementChild.cloneNode(true);
+          card.querySelector(".name").textContent = item.name;
+          card.querySelector(".barcode").textContent =
+            item.barcode || "ไม่มีบาร์โค้ด";
+          const badge = card.querySelector(".badge"),
+            entry = card.querySelector(".entry"),
+            overview = card.querySelector(".overview");
+          if (mode === "count") {
+            badge.textContent = `${f(physical(item))} ขวด`;
+            entry.append(
+              field("จำนวนลัง", item.countCases, (v) => (item.countCases = v)),
+              field(
+                "จำนวนขวด",
+                item.countBottles,
+                (v) => (item.countBottles = v),
+              ),
+            );
+          }
+          if (mode === "system") {
+            badge.textContent = `${f(n(item.system))} ขวด`;
+            entry.className = "entry one";
+            entry.append(
+              field("ยอดในระบบ (ขวด)", item.system, (v) => (item.system = v)),
+            );
+          }
+          if (mode === "sales") {
+            badge.textContent = `${f(sold(item))} ขวด`;
+            entry.append(
+              field(
+                "ขายไป (ลัง)",
+                item.salesCases,
+                (v) => (item.salesCases = v),
+              ),
+              field(
+                "ขายไป (ขวด)",
+                item.salesBottles,
+                (v) => (item.salesBottles = v),
+              ),
+            );
+          }
+          if (mode === "total") {
+            badge.textContent = `${f(physical(item))} ขวด`;
+            overview.innerHTML = metrics(item);
+          }
+          list.append(card);
+        });
+        $("#zoneLabel").textContent =
+          `${mode === "system" ? "ยอดในระบบ" : mode === "sales" ? "ยอดขาย" : mode === "total" ? "ยอดตรวจจริง" : "ยอดตรวจจริง"} ${zone === "floor" ? "Sales Floor" : "Stockroom"}`;
+        $("#zoneTotal").textContent =
+          `${f(sum(zone, mode === "system" ? (x) => n(x.system) : mode === "sales" ? sold : physical))} ขวด`;
+        $("#add").style.display = mode === "total" ? "none" : "block";
+        update();
+      }
+      function update() {
+        const floor = sum("floor", physical),
+          room = sum("room", physical),
+          actual = floor + room,
+          system = all((x) => n(x.system)),
+          sales = all(sold),
+          diff = actual - system;
+        $("#actual").textContent = `${f(actual)} ขวด`;
+        $("#system").textContent = `${f(system)} ขวด`;
+        $("#sales").textContent = `${f(sales)} ขวด`;
+        $("#diff").textContent = `${sg(diff)} ขวด`;
+        $("#diffBox").className =
+          `s-card ${diff > 0 ? "plus" : diff < 0 ? "minus" : ""}`;
+        $("#floor").textContent = `${f(floor)} ขวด`;
+        $("#room").textContent = `${f(room)} ขวด`;
+        save();
+      }
+      function toast(t) {
+        $("#toast").textContent = t;
+        $("#toast").classList.add("show");
+        setTimeout(() => $("#toast").classList.remove("show"), 2200);
+      }
+      function add() {
+        const name = prompt("ชื่อสินค้า");
+        if (!name) return;
+        const barcode = prompt("บาร์โค้ด (เว้นว่างได้)") || "";
+        state[zone].push({
+          name,
+          barcode,
+          countCases: 0,
+          countBottles: 0,
+          system: 0,
+          salesCases: 0,
+          salesBottles: 0,
+        });
+        render();
+      }
+      function load() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(KEY));
+          saved ? (state = { ...state, ...saved }) : migrate();
+        } catch (e) {}
+        $("#date").value = state.date;
+        render();
+      }
+      function lineDetails(z, title) {
+        const rows = state[z]
+          .map(
+            (x) =>
+              `• ${x.name}\n  ระบบ ${f(n(x.system))} | ขาย ${f(sold(x))} | ตรวจจริง ${f(physical(x))} | ต่าง ${sg(physical(x) - n(x.system))} ขวด`,
+          )
+          .join("\n");
+        return `🏪 ${title}\n${rows}\nรวมตรวจจริง ${f(sum(z, physical))} | ระบบ ${f(sum(z, (x) => n(x.system)))} | ขาย ${f(sum(z, sold))} ขวด`;
+      }
+      document.querySelectorAll("[data-zone]").forEach((b) =>
+        b.addEventListener("click", () => {
+          zone = b.dataset.zone;
+          document
+            .querySelectorAll("[data-zone]")
+            .forEach((x) => x.classList.toggle("active", x === b));
+          render();
+        }),
+      );
+      document.querySelectorAll("[data-mode]").forEach((b) =>
+        b.addEventListener("click", () => {
+          mode = b.dataset.mode;
+          document
+            .querySelectorAll("[data-mode]")
+            .forEach((x) => x.classList.toggle("active", x === b));
+          render();
+        }),
+      );
+      $("#date").addEventListener("input", (e) => {
+        state.date = e.target.value;
+        save();
+      });
+      $("#add").addEventListener("click", add);
+      $("#reset").addEventListener("click", () => {
+        if (!confirm("ล้างตัวเลขทั้งหมดใช่หรือไม่?")) return;
+        ["floor", "room"].forEach((z) =>
+          state[z].forEach((x) =>
+            Object.assign(x, {
+              countCases: 0,
+              countBottles: 0,
+              system: 0,
+              salesCases: 0,
+              salesBottles: 0,
+            }),
+          ),
+        );
+        render();
+        toast("ล้างข้อมูลแล้ว");
+      });
+      $("#line").addEventListener("click", () => {
+        const floor = sum("floor", physical),
+          room = sum("room", physical),
+          actual = floor + room,
+          system = all((x) => n(x.system)),
+          sales = all(sold),
+          date = new Date(`${state.date}T00:00:00`).toLocaleDateString(
+            "th-TH",
+            { year: "numeric", month: "long", day: "numeric" },
+          ),
+          text = `📋 สรุปตรวจนับสุรา\nวันที่: ${date}\n━━━━━━━━━━━━\n${lineDetails("room", "Stockroom")}\n━━━━━━━━━━━━\n${lineDetails("floor", "Sales Floor")}\n━━━━━━━━━━━━\n✅ ยอดรวมตรวจจริง: ${f(actual)} ขวด\n📊 ยอดในระบบ: ${f(system)} ขวด\n🛒 ยอดขาย: ${f(sales)} ขวด\n⚠️ ผลต่าง: ${sg(actual - system)} ขวด`;
+        navigator.clipboard?.writeText(text);
+        toast("คัดลอกสรุปแล้ว กำลังเปิด LINE");
+        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
+      });
+      load();
+    </script>
+  </body>
+</html>
