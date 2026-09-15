@@ -381,7 +381,7 @@
             <span>ยอดขาย</span><strong id="sales">0 ขวด</strong>
           </div>
           <div id="diffBox" class="s-card">
-            <span>ผลต่าง ตรวจจริง − ระบบ</span><strong id="diff">0 ขวด</strong>
+            <span>ผลต่างสุทธิ</span><strong id="diff">0 ขวด</strong>
           </div>
           <div class="s-card">
             <span>รวมสินค้า Sales Floor</span><strong id="floor">0 ขวด</strong>
@@ -433,9 +433,11 @@
         n = (x) => Math.max(0, Number(x) || 0),
         f = (x) => new Intl.NumberFormat("th-TH").format(x),
         sg = (x) => `${x > 0 ? "+" : ""}${f(x)}`,
-        saleBreakdown = (total) => {
-          const bottles = n(total);
-          return `${f(Math.floor(bottles / CASE))} ลัง ${f(bottles % CASE)} ขวด (${f(bottles)} ขวด)`;
+        saleBreakdown = (cases, bottles) => {
+          const caseCount = n(cases),
+            bottleCount = n(bottles),
+            total = caseCount * CASE + bottleCount;
+          return `${f(caseCount)} ลัง ${f(bottleCount)} ขวด (${f(total)} ขวด)`;
         },
         countPeriod = () =>
           new Date().getHours() < 12
@@ -449,6 +451,7 @@
           room: structuredClone(MASTER),
         };
       const physical = (x) => n(x.countCases) * CASE + n(x.countBottles),
+        caseSales = (x) => n(x.salesCases) * CASE,
         sold = (x) => n(x.salesCases) * CASE + n(x.salesBottles),
         sum = (z, key) => state[z].reduce((a, x) => a + key(x), 0),
         all = (key) => sum("floor", key) + sum("room", key),
@@ -500,12 +503,12 @@
         return wrap;
       }
       function metrics(item) {
-        const d = physical(item) - n(item.system);
+        const d = physical(item) + caseSales(item) - n(item.system);
         return [
           ["ยอดในระบบ", `${f(n(item.system))} ขวด`],
           ["ยอดขาย", `${f(sold(item))} ขวด`],
           ["ตรวจจริง", `${f(physical(item))} ขวด`],
-          ["ผลต่าง", `${sg(d)} ขวด`, d],
+          ["ผลต่างสุทธิ", `${sg(d)} ขวด`, d],
         ]
           .map(
             ([a, b, d]) =>
@@ -572,7 +575,7 @@
           actual = floor + room,
           system = all((x) => n(x.system)),
           sales = all(sold),
-          diff = actual - system;
+          diff = actual + all(caseSales) - system;
         $("#actual").textContent = `${f(actual)} ขวด`;
         $("#system").textContent = `${f(system)} ขวด`;
         $("#sales").textContent = `${f(sales)} ขวด`;
@@ -623,20 +626,23 @@
                 room: 0,
                 floor: 0,
                 system: 0,
-                sales: 0,
+                salesCases: 0,
+                salesBottles: 0,
               });
             const product = products.get(key);
             product[z] += physical(item);
             product.system += n(item.system);
-            product.sales += sold(item);
+            product.salesCases += n(item.salesCases);
+            product.salesBottles += n(item.salesBottles);
           }),
         );
         return [...products.values()]
           .map(
             (item) => {
               const actual = item.room + item.floor;
-              const netDifference = actual + item.sales - item.system;
-              return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.sales)}\n  ระบบ ${f(item.system)} | ตรวจ+ขาย ${f(actual + item.sales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
+              const caseSales = item.salesCases * CASE;
+              const netDifference = actual + caseSales - item.system;
+              return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
             },
           )
           .join("\n\n");
@@ -685,13 +691,15 @@
           room = sum("room", physical),
           actual = floor + room,
           system = all((x) => n(x.system)),
+          salesCases = all((x) => n(x.salesCases)),
+          salesBottles = all((x) => n(x.salesBottles)),
           sales = all(sold),
-          netDifference = actual + sales - system,
+          netDifference = actual + salesCases * CASE - system,
           date = new Date(`${state.date}T00:00:00`).toLocaleDateString(
             "th-TH",
             { year: "numeric", month: "long", day: "numeric" },
           ),
-          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${saleBreakdown(sales)}\nผลต่างสุทธิ (ตรวจ+ขาย−ระบบ) ${sg(netDifference)} ขวด`;
+          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${saleBreakdown(salesCases, salesBottles)}\nผลต่างสุทธิ (ตรวจ+ขายลัง−ระบบ) ${sg(netDifference)} ขวด\nหมายเหตุ: ขายขวดถูกตัดจากระบบแล้ว`;
         navigator.clipboard?.writeText(text);
         toast("คัดลอกสรุปแล้ว กำลังเปิด LINE");
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
