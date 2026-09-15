@@ -629,10 +629,10 @@
           .map(
             (item) => {
               const actual = item.room + item.floor;
-              return `• ${item.name}\n  Stockroom ${f(item.room)} | Sales Floor ${f(item.floor)} | รวม ${f(actual)} ขวด\n  ระบบ ${f(item.system)} | ผลต่าง ${sg(actual - item.system)} ขวด`;
+              return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  รวม ${f(actual)} | ระบบ ${f(item.system)} | ต่าง ${sg(actual - item.system)} ขวด`;
             },
           )
-          .join("\n");
+          .join("\n\n");
       }
       document.querySelectorAll("[data-zone]").forEach((b) =>
         b.addEventListener("click", () => {
@@ -683,7 +683,7 @@
             "th-TH",
             { year: "numeric", month: "long", day: "numeric" },
           ),
-          text = `📋 สรุปตรวจนับสุรา\nรอบ: ${state.countPeriod || countPeriod()} | วันที่: ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n✅ รวมตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\n🛒 ยอดขาย ${f(sales)} ขวด | ผลต่าง ${sg(actual - system)} ขวด`;
+          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${f(sales)} ขวด | ผลต่าง ${sg(actual - system)} ขวด`;
         navigator.clipboard?.writeText(text);
         toast("คัดลอกสรุปแล้ว กำลังเปิด LINE");
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
