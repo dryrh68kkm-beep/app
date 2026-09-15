@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#12312a" />
+  <title>Liquor Count | ตรวจนับสุรา</title>
+  <style>
+    :root { --ink:#142621; --muted:#698078; --line:#dfe9e5; --paper:#fff; --bg:#f2f7f5; --green:#126b52; --deep:#103b32; --accent:#e5a93d; --soft:#e9f5ef; --danger:#b64646; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--bg); font-family:"Noto Sans Thai","Sarabun",system-ui,sans-serif; }
+    .shell { max-width:1180px; margin:0 auto; padding:28px 20px 56px; }
+    header { display:flex; justify-content:space-between; gap:20px; align-items:flex-start; color:#fff; padding:28px 30px; border-radius:22px; background:linear-gradient(135deg,#0c342a,#176b54); box-shadow:0 16px 38px #0a403025; }
+    .eyebrow { margin:0 0 6px; opacity:.75; font-size:12px; font-weight:800; letter-spacing:.11em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(24px,4vw,36px); letter-spacing:-.04em; }
+    .subtitle { margin:8px 0 0; color:#d8eee6; }
+    .date-box { min-width:165px; padding:12px 14px; border:1px solid #ffffff40; border-radius:13px; background:#ffffff12; }
+    .date-box label { display:block; margin-bottom:5px; font-size:12px; color:#d8eee6; }
+    .date-box input { width:100%; border:0; outline:0; color:#fff; background:transparent; font:inherit; font-weight:700; color-scheme:dark; }
+    .notice { display:flex; gap:10px; align-items:center; margin:18px 0; padding:13px 16px; border:1px solid #cde6da; border-radius:13px; color:#205b4a; background:#e5f4ed; font-size:14px; }
+    .notice b { white-space:nowrap; }
+    .layout { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .section { overflow-x:auto; border:1px solid var(--line); border-radius:18px; background:var(--paper); box-shadow:0 8px 22px #174d3b0b; }
+    .section-head { display:flex; justify-content:space-between; align-items:center; padding:18px 20px; background:#fbfdfc; border-bottom:1px solid var(--line); }
+    .section-title { display:flex; align-items:center; gap:10px; }
+    .icon { display:grid; place-items:center; width:35px; height:35px; border-radius:11px; color:#fff; background:var(--green); font-size:19px; }
+    .section h2 { margin:0; font-size:18px; }
+    .section small { display:block; margin-top:3px; color:var(--muted); }
+    .row { min-width:880px; display:grid; grid-template-columns:minmax(130px,1fr) minmax(118px,.8fr) 60px 60px 72px 60px 60px 72px 82px 72px 32px; align-items:center; gap:7px; padding:10px 14px; border-bottom:1px solid #edf2ef; }
+    .row:last-child { border-bottom:0; }
+    .labels { padding-top:10px; padding-bottom:5px; color:#7e918a; background:#fbfdfc; font-size:11px; font-weight:800; text-transform:uppercase; }
+    .labels span:nth-child(n+2) { text-align:center; }
+    input[type=text], input[type=number] { width:100%; height:39px; border:1px solid #d9e6e1; border-radius:9px; outline:0; padding:0 10px; color:var(--ink); background:#fff; font:inherit; }
+    input:focus { border-color:#15936d; box-shadow:0 0 0 3px #15a1741a; }
+    input[type=number] { padding:0 6px; text-align:center; }
+    .total-cell, .sold-cell { min-height:39px; display:grid; place-items:center; border-radius:9px; color:#14553f; background:var(--soft); font-weight:800; }
+    .sold-cell { color:#895c0a; background:#fff5db; }
+    .variance-cell { min-height:39px; display:grid; place-items:center; border-radius:9px; background:#eef2f0; font-weight:800; }
+    .variance-cell.positive { color:#0c704a; background:#e1f5e9; }
+    .variance-cell.negative { color:#b24242; background:#fff0ef; }
+    .variance-cell.zero { color:#5a7068; }
+    button { border:0; cursor:pointer; font:inherit; font-weight:750; transition:.18s ease; }
+    button:active { transform:translateY(1px); }
+    .delete { width:31px; height:31px; border-radius:8px; color:#9a4a4a; background:#fff0f0; font-size:18px; line-height:1; }
+    .delete:hover { background:#fbdede; }
+    .add { width:calc(100% - 28px); margin:12px 14px 14px; padding:11px; border:1px dashed #a8cbbb; border-radius:10px; color:#176148; background:#f7fbf9; }
+    .add:hover { border-color:var(--green); background:#eff8f3; }
+    .summary { margin-top:18px; padding:22px; border-radius:19px; color:#fff; background:linear-gradient(112deg,#113d33,#196951); box-shadow:0 16px 38px #0a403025; }
+    .summary-top { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
+    .summary h2 { margin:0; font-size:20px; }
+    .summary p { margin:5px 0 0; color:#cae4da; font-size:14px; }
+    .grand { text-align:right; }
+    .grand span { display:block; color:#cde5da; font-size:12px; }
+    .grand strong { display:block; margin-top:1px; font-size:32px; line-height:1; }
+    .grand em { font-style:normal; font-size:15px; color:#cde5da; }
+    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:20px; }
+    .summary-card { padding:14px 16px; border:1px solid #ffffff27; border-radius:13px; background:#ffffff10; }
+    .summary-card div { color:#cde5da; font-size:13px; }
+    .summary-card strong { display:block; margin-top:3px; font-size:24px; }
+    .summary-card span { font-size:13px; color:#cde5da; }
+    .actions { display:flex; justify-content:flex-end; gap:9px; margin-top:18px; }
+    .actions button { padding:11px 15px; border-radius:10px; }
+    .secondary { color:#28594a; background:#fff; }
+    .secondary:hover { background:#e9f4ee; }
+    .primary { color:#fff; background:#d38d17; }
+    .primary:hover { background:#bb790c; }
+    .line-share { color:#fff; background:#06c755; }
+    .line-share:hover { background:#04ad49; }
+    .meta { margin-top:20px; text-align:center; color:#809189; font-size:12px; }
+    @media (max-width:760px) { .shell{padding:15px 12px 38px} header{padding:21px 18px; display:block} .date-box{margin-top:16px; width:100%} .layout{grid-template-columns:1fr; gap:13px} .row{min-width:880px; gap:4px; padding:9px 7px}.section-head{padding:15px}.labels{font-size:8px}.summary{padding:18px}.summary-grid{grid-template-columns:1fr}.grand strong{font-size:28px} input[type=text]{padding:0 5px;font-size:12px} }
+    @media print { body{background:#fff}.shell{max-width:none;padding:0} header{border-radius:0;box-shadow:none}.notice,.add,.delete,.actions,.meta{display:none}.layout{gap:10px}.section{box-shadow:none}.summary{margin-top:10px;border-radius:0;box-shadow:none} input{border:0!important;box-shadow:none!important;padding:0!important;background:transparent!important}.row{grid-template-columns:minmax(130px,1fr) minmax(118px,.8fr) 68px 68px 86px}.row>*:last-child{display:none} }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div><p class="eyebrow">Stock Counting</p><h1>ตรวจนับสุรา</h1><p class="subtitle">บันทึกจำนวนสินค้าเป็นลังและขวด พร้อมสรุปยอดทั้งหมด</p></div>
+      <div class="date-box"><label for="countDate">วันที่ตรวจนับ</label><input id="countDate" type="date" /></div>
+    </header>
+
+    <div class="notice"><b>วิธีคำนวณ:</b> 1 ลัง = 12 ขวด &nbsp;•&nbsp; ระบบจะรวมยอดเป็น “ขวด” ให้อัตโนมัติ</div>
+    <div class="layout">
+      <section class="section" data-zone="front">
+        <div class="section-head"><div class="section-title"><span class="icon">▣</span><div><h2>Sales Floor</h2><small>สินค้าในพื้นที่ขาย</small></div></div></div>
+        <div class="row labels"><span>ชื่อสินค้า</span><span>บาร์โค้ด</span><span>นับลัง</span><span>นับขวด</span><span>ตรวจจริง</span><span>ขายลัง</span><span>ขายขวด</span><span>รวมขาย</span><span>Stock System</span><span>ผลต่าง</span><span></span></div>
+        <div class="rows"></div><button class="add" type="button" onclick="addItem('front')">+ เพิ่มรายการ Sales Floor</button>
+      </section>
+      <section class="section" data-zone="back">
+        <div class="section-head"><div class="section-title"><span class="icon">▤</span><div><h2>Stockroom</h2><small>สินค้าในห้องสต็อก</small></div></div></div>
+        <div class="row labels"><span>ชื่อสินค้า</span><span>บาร์โค้ด</span><span>นับลัง</span><span>นับขวด</span><span>ตรวจจริง</span><span>ขายลัง</span><span>ขายขวด</span><span>รวมขาย</span><span>Stock System</span><span>ผลต่าง</span><span></span></div>
+        <div class="rows"></div><button class="add" type="button" onclick="addItem('back')">+ เพิ่มรายการ Stockroom</button>
+      </section>
+    </div>
+
+    <section class="summary">
+      <div class="summary-top"><div><h2>สรุปผลการตรวจนับ</h2><p>จำนวนสินค้าคงเหลือทั้งหมด ณ วันที่ตรวจนับ</p></div><div class="grand"><span>รวมทั้งหมด</span><strong id="allTotal">0</strong><em>ขวด</em></div></div>
+      <div class="summary-grid">
+        <div class="summary-card"><div>Sales Floor (ตรวจจริง)</div><strong id="frontTotal">0 <span>ขวด</span></strong></div>
+        <div class="summary-card"><div>Stockroom (ตรวจจริง)</div><strong id="backTotal">0 <span>ขวด</span></strong></div>
+        <div class="summary-card"><div>ขายไปรวม</div><strong id="soldTotal">0 <span>ขวด</span></strong></div>
+        <div class="summary-card"><div>ผลต่างรวมเทียบระบบ</div><strong id="compareTotal">0 <span>ขวด</span></strong></div>
+      </div>
+      <div class="actions"><button class="secondary" id="reset" type="button">ล้างข้อมูล</button><button class="line-share" id="shareLine" type="button">ส่งสรุปผ่าน LINE</button></div>
+    </section>
+    <div class="meta">ข้อมูลถูกเก็บไว้ในอุปกรณ์เครื่องนี้อัตโนมัติ</div>
+  </main>
+  <template id="rowTemplate"><div class="row item-row"><input class="product" type="text" placeholder="เช่น เบียร์ / วิสกี้" aria-label="ชื่อสินค้า"><input class="barcode" type="text" inputmode="numeric" placeholder="บาร์โค้ด" aria-label="บาร์โค้ด"><input class="cases" type="number" min="0" step="1" value="0" aria-label="จำนวนลังที่นับ"><input class="bottles" type="number" min="0" step="1" value="0" aria-label="จำนวนขวดที่นับ"><div class="total-cell">0</div><input class="sold-cases" type="number" min="0" step="1" value="0" aria-label="จำนวนลังที่ขาย"><input class="sold-bottles" type="number" min="0" step="1" value="0" aria-label="จำนวนขวดที่ขาย"><div class="sold-cell">0</div><input class="system" type="number" min="0" step="1" value="0" aria-label="Stock System เป็นขวด"><div class="variance-cell zero">0</div><button class="delete" type="button" aria-label="ลบรายการ">×</button></div></template>
+  <script>
+    const KEY='liquor-count-v1', CASE_SIZE=12;
+    const DEFAULT_PRODUCTS=[
+      {product:'หงส์ทอง 35 ดีกรี 350 ซีซี', barcode:'8852388000620'},
+      {product:'แสงโสมเหรียญทอง 700 ซีซี', barcode:'8851707000181'},
+      {product:'แสงโสม 200 มล.', barcode:'8851707000198'},
+      {product:'แสงโสมเหรียญทอง 300 ซีซี', barcode:'8851707000174'},
+      {product:'หงส์ทอง 35 ดีกรี 700 ซีซี', barcode:'8852388000613'},
+      {product:'หงส์ทอง 200 มล.', barcode:'8852388000767'}
+    ];
+    const $=s=>document.querySelector(s);
+    const format=n=>new Intl.NumberFormat('th-TH').format(n);
+    const signed=n=>`${n>0?'+':''}${format(n)}`;
+    const createRow=(zone,data={})=>{
+      const node=$('#rowTemplate').content.firstElementChild.cloneNode(true);
+      node.querySelector('.product').value=data.product||'';
+      node.querySelector('.barcode').value=data.barcode||'';
+      node.querySelector('.cases').value=Number.isFinite(data.cases)?data.cases:(data.cases||0);
+      node.querySelector('.bottles').value=Number.isFinite(data.bottles)?data.bottles:(data.bottles||0);
+      node.querySelector('.system').value=Number.isFinite(data.system)?data.system:(data.system||0);
+      node.querySelector('.sold-cases').value=Number.isFinite(data.soldCases)?data.soldCases:(data.soldCases||0);
+      node.querySelector('.sold-bottles').value=Number.isFinite(data.soldBottles)?data.soldBottles:(data.soldBottles||0);
+      node.querySelectorAll('input').forEach(i=>i.addEventListener('input',update));
+      node.querySelector('.delete').addEventListener('click',()=>{node.remove();update();});
+      document.querySelector(`[data-zone="${zone}"] .rows`).append(node);
+    };
+    const zoneStats=zone=>[...document.querySelectorAll(`[data-zone="${zone}"] .item-row`)].reduce((stats,row)=>{
+      const cases=Math.max(0,Number(row.querySelector('.cases').value)||0), bottles=Math.max(0,Number(row.querySelector('.bottles').value)||0), system=Math.max(0,Number(row.querySelector('.system').value)||0), soldCases=Math.max(0,Number(row.querySelector('.sold-cases').value)||0), soldBottles=Math.max(0,Number(row.querySelector('.sold-bottles').value)||0);
+      const total=cases*CASE_SIZE+bottles, sold=soldCases*CASE_SIZE+soldBottles, diff=total-system, variance=row.querySelector('.variance-cell'); row.querySelector('.total-cell').textContent=format(total); row.querySelector('.sold-cell').textContent=format(sold); variance.textContent=signed(diff); variance.className=`variance-cell ${diff>0?'positive':diff<0?'negative':'zero'}`; stats.actual+=total; stats.system+=system; stats.sold+=sold; return stats;
+    },{actual:0,system:0,sold:0});
+    const zoneTotal=zone=>zoneStats(zone).actual;
+    const save=()=>{const data={date:$('#countDate').value,front:[],back:[]};['front','back'].forEach(zone=>document.querySelectorAll(`[data-zone="${zone}"] .item-row`).forEach(r=>data[zone].push({product:r.querySelector('.product').value,barcode:r.querySelector('.barcode').value,cases:Number(r.querySelector('.cases').value)||0,bottles:Number(r.querySelector('.bottles').value)||0,soldCases:Number(r.querySelector('.sold-cases').value)||0,soldBottles:Number(r.querySelector('.sold-bottles').value)||0,system:Number(r.querySelector('.system').value)||0})));localStorage.setItem(KEY,JSON.stringify(data));};
+    const update=()=>{const front=zoneStats('front'),back=zoneStats('back'),actual=front.actual+back.actual,system=front.system+back.system,sold=front.sold+back.sold,diff=actual-system;$('#frontTotal').innerHTML=`${format(front.actual)} <span>ขวด</span>`;$('#backTotal').innerHTML=`${format(back.actual)} <span>ขวด</span>`;$('#soldTotal').innerHTML=`${format(sold)} <span>ขวด</span>`;$('#compareTotal').innerHTML=`${signed(diff)} <span>ขวด</span>`;$('#allTotal').textContent=format(actual);save();};
+    const lineSection=(zone,title)=>{const rows=[...document.querySelectorAll(`[data-zone="${zone}"] .item-row`)];const items=rows.map(r=>{const name=r.querySelector('.product').value.trim()||'ไม่ระบุสินค้า';const code=r.querySelector('.barcode').value.trim();const cases=Math.max(0,Number(r.querySelector('.cases').value)||0);const bottles=Math.max(0,Number(r.querySelector('.bottles').value)||0);const soldCases=Math.max(0,Number(r.querySelector('.sold-cases').value)||0);const soldBottles=Math.max(0,Number(r.querySelector('.sold-bottles').value)||0);const actual=cases*CASE_SIZE+bottles, sold=soldCases*CASE_SIZE+soldBottles, system=Math.max(0,Number(r.querySelector('.system').value)||0);return `• ${name}${code?` (${code})`:''}\n  ตรวจจริง ${format(actual)} | ขาย ${format(sold)} | ระบบ ${format(system)} | ผลต่าง ${signed(actual-system)} ขวด`;});const stats=zoneStats(zone);return `🏪 ${title}\n${items.join('\n')||'- ไม่มีรายการ-'}\nตรวจจริง ${format(stats.actual)} | ขาย ${format(stats.sold)} | ระบบ ${format(stats.system)} | ผลต่าง ${signed(stats.actual-stats.system)} ขวด`;};
+    const getLineSummary=()=>{const date=$('#countDate').value?new Date(`${$('#countDate').value}T00:00:00`).toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'}):'-',front=zoneStats('front'),back=zoneStats('back'),actual=front.actual+back.actual,system=front.system+back.system,sold=front.sold+back.sold;return `📋 สรุปตรวจนับสุรา\nวันที่: ${date}\n━━━━━━━━━━━━\n${lineSection('front','Sales Floor')}\n━━━━━━━━━━━━\n${lineSection('back','Stockroom')}\n━━━━━━━━━━━━\n✅ รวมตรวจจริง: ${format(actual)} ขวด\n🛒 ขายไปรวม: ${format(sold)} ขวด\n📦 Stock System: ${format(system)} ขวด\n⚠️ ผลต่างรวม: ${signed(actual-system)} ขวด`;};
+    const load=()=>{let data;try{data=JSON.parse(localStorage.getItem(KEY));}catch(e){};$('#countDate').value=(data&&data.date)||new Date().toISOString().slice(0,10);['front','back'].forEach(zone=>{const saved=data&&data[zone];const onlyBlank=saved&&saved.length===1&&!saved[0].product&&!saved[0].barcode&&!saved[0].cases&&!saved[0].bottles&&!saved[0].system;const rows=saved&&saved.length&&!onlyBlank?saved:DEFAULT_PRODUCTS;rows.forEach(r=>createRow(zone,r));});update();};
+    window.addItem=zone=>{createRow(zone);update();};
+    $('#countDate').addEventListener('input',save);
+    $('#reset').addEventListener('click',()=>{if(confirm('ต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?')){localStorage.removeItem(KEY);document.querySelectorAll('.rows').forEach(x=>x.innerHTML='');load();}});
+    const copyText=text=>{const area=document.createElement('textarea');area.value=text;area.setAttribute('readonly','');area.style.cssText='position:fixed;top:-1000px;opacity:0';document.body.append(area);area.select();document.execCommand('copy');area.remove();};
+    $('#shareLine').addEventListener('click',()=>{const text=getLineSummary();copyText(text);window.location.href=`https://line.me/R/msg/text/?${encodeURIComponent(text)}`;});
+    load();
+  </script>
+</body>
+</html>
