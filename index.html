@@ -482,9 +482,15 @@
         input.min = "0";
         input.inputMode = "numeric";
         input.value = value;
+        input.addEventListener("focus", () => {
+          if (n(input.value) === 0) input.value = "";
+        });
         input.addEventListener("input", (e) => {
           change(n(e.target.value));
           update();
+        });
+        input.addEventListener("blur", () => {
+          if (input.value === "") input.value = "0";
         });
         wrap.append(lab, input);
         return wrap;
