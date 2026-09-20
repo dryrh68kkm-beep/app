@@ -414,12 +414,12 @@
         KEY = "liquor-count-categories-v3",
         OLD = "liquor-count-v1",
         MASTER = [
+          ["หงส์ทอง 200 มล.", "8852388000767"],
           ["หงส์ทอง 35 ดีกรี 350 ซีซี", "8852388000620"],
-          ["แสงโสมเหรียญทอง 700 ซีซี", "8851707000181"],
+          ["หงส์ทอง 35 ดีกรี 700 ซีซี", "8852388000613"],
           ["แสงโสม 200 มล.", "8851707000198"],
           ["แสงโสมเหรียญทอง 300 ซีซี", "8851707000174"],
-          ["หงส์ทอง 35 ดีกรี 700 ซีซี", "8852388000613"],
-          ["หงส์ทอง 200 มล.", "8852388000767"],
+          ["แสงโสมเหรียญทอง 700 ซีซี", "8851707000181"],
         ].map(([name, barcode]) => ({
           name,
           barcode,
@@ -439,6 +439,11 @@
             total = caseCount * CASE + bottleCount;
           return `${f(caseCount)} ลัง ${f(bottleCount)} ขวด (${f(total)} ขวด)`;
         },
+        liquorGroup = (name) =>
+          name.includes("หงส์ทอง") ? 0 : name.includes("แสงโสม") ? 1 : 2,
+        sortLiquor = (a, b) =>
+          liquorGroup(a.name) - liquorGroup(b.name) ||
+          a.name.localeCompare(b.name, "th", { numeric: true }),
         countPeriod = () =>
           new Date().getHours() < 12
             ? "ตรวจนับรอบเช้า"
@@ -611,6 +616,8 @@
           const saved = JSON.parse(localStorage.getItem(KEY));
           saved ? (state = { ...state, ...saved }) : migrate();
         } catch (e) {}
+        state.room.sort(sortLiquor);
+        state.floor.sort(sortLiquor);
         state.countPeriod = countPeriod();
         $("#date").value = state.date;
         render();
@@ -637,6 +644,7 @@
           }),
         );
         return [...products.values()]
+          .sort(sortLiquor)
           .map(
             (item) => {
               const actual = item.room + item.floor;
