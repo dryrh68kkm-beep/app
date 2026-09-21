@@ -155,20 +155,46 @@
         color: var(--muted);
         font-size: 11px;
       }
-      .location {
-        display: block;
-        width: 100%;
-        margin-top: 6px;
-        padding: 5px 8px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fbfdfe;
-        color: var(--ink);
-        font: inherit;
-        font-size: 12px;
+      .points {
+        display: grid;
+        gap: 10px;
       }
-      .location::placeholder {
-        color: #9fb1bb;
+      .point {
+        padding-top: 10px;
+        border-top: 1px dashed var(--line);
+      }
+      .point:first-child {
+        padding-top: 0;
+        border-top: 0;
+      }
+      .point-label {
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .point-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+      }
+      .point-remove {
+        margin-top: 6px;
+        border: 0;
+        background: none;
+        color: var(--red);
+        font: 700 12px inherit;
+        padding: 0;
+      }
+      .point-add {
+        width: 100%;
+        margin-top: 4px;
+        padding: 10px;
+        border: 1px dashed #8dcedc;
+        border-radius: 11px;
+        color: #159f9b;
+        background: #f1fbfc;
+        font: 800 13px inherit;
       }
       .badge {
         padding: 5px 8px;
@@ -418,7 +444,6 @@
           <div>
             <div class="name"></div>
             <div class="barcode"></div>
-            <input class="location" placeholder="จุดที่วางสินค้า เช่น จุดที่ 1" />
           </div>
           <div class="badge"></div>
         </div>
@@ -439,9 +464,7 @@
         ].map(([name, barcode]) => ({
           name,
           barcode,
-          location: "",
-          countCases: 0,
-          countBottles: 0,
+          points: [{ cases: 0, bottles: 0 }],
           system: 0,
           salesCases: 0,
           salesBottles: 0,
@@ -472,7 +495,11 @@
           floor: structuredClone(MASTER),
           room: structuredClone(MASTER),
         };
-      const physical = (x) => n(x.countCases) * CASE + n(x.countBottles),
+      const physical = (x) =>
+          (x.points || []).reduce(
+            (a, p) => a + n(p.cases) * CASE + n(p.bottles),
+            0,
+          ),
         caseSales = (x) => n(x.salesCases) * CASE,
         sold = (x) => n(x.salesCases) * CASE + n(x.salesBottles),
         sum = (z, key) => state[z].reduce((a, x) => a + key(x), 0),
@@ -492,9 +519,7 @@
             state[to] = old[from].map((x) => ({
               name: x.product || "ไม่ระบุสินค้า",
               barcode: x.barcode || "",
-              location: "",
-              countCases: n(x.cases),
-              countBottles: n(x.bottles),
+              points: [{ cases: n(x.cases), bottles: n(x.bottles) }],
               system: n(x.system),
               salesCases: n(x.soldCases),
               salesBottles: n(x.soldBottles),
@@ -547,25 +572,49 @@
           card.querySelector(".name").textContent = item.name;
           card.querySelector(".barcode").textContent =
             item.barcode || "ไม่มีบาร์โค้ด";
-          const locationInput = card.querySelector(".location");
-          locationInput.value = item.location || "";
-          locationInput.addEventListener("input", (e) => {
-            item.location = e.target.value;
-            save();
-          });
           const badge = card.querySelector(".badge"),
             entry = card.querySelector(".entry"),
             overview = card.querySelector(".overview");
           if (mode === "count") {
             badge.textContent = `${f(physical(item))} ขวด`;
-            entry.append(
-              field("จำนวนลัง", item.countCases, (v) => (item.countCases = v)),
-              field(
-                "จำนวนขวด",
-                item.countBottles,
-                (v) => (item.countBottles = v),
-              ),
-            );
+            entry.className = "entry one";
+            const pointsWrap = document.createElement("div");
+            pointsWrap.className = "points";
+            item.points.forEach((p, pi) => {
+              const row = document.createElement("div");
+              row.className = "point";
+              const label = document.createElement("div");
+              label.className = "point-label";
+              label.textContent = `จุดที่ ${pi + 1}`;
+              const fields = document.createElement("div");
+              fields.className = "point-fields";
+              fields.append(
+                field("จำนวนลัง", p.cases, (v) => (p.cases = v)),
+                field("จำนวนขวด", p.bottles, (v) => (p.bottles = v)),
+              );
+              row.append(label, fields);
+              if (item.points.length > 1) {
+                const removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.className = "point-remove";
+                removeBtn.textContent = "ลบจุดนี้";
+                removeBtn.addEventListener("click", () => {
+                  item.points.splice(pi, 1);
+                  render();
+                });
+                row.append(removeBtn);
+              }
+              pointsWrap.append(row);
+            });
+            const addPointBtn = document.createElement("button");
+            addPointBtn.type = "button";
+            addPointBtn.className = "point-add";
+            addPointBtn.textContent = "+ เพิ่มจุดสินค้า";
+            addPointBtn.addEventListener("click", () => {
+              item.points.push({ cases: 0, bottles: 0 });
+              render();
+            });
+            entry.append(pointsWrap, addPointBtn);
           }
           if (mode === "system") {
             badge.textContent = `${f(n(item.system))} ขวด`;
@@ -624,24 +673,32 @@
         const name = prompt("ชื่อสินค้า");
         if (!name) return;
         const barcode = prompt("บาร์โค้ด (เว้นว่างได้)") || "";
-        const location = prompt("จุดที่วางสินค้า เช่น จุดที่ 1 (เว้นว่างได้)") || "";
         state[zone].push({
           name,
           barcode,
-          location,
-          countCases: 0,
-          countBottles: 0,
+          points: [{ cases: 0, bottles: 0 }],
           system: 0,
           salesCases: 0,
           salesBottles: 0,
         });
         render();
       }
+      function normalize(item) {
+        if (!Array.isArray(item.points) || !item.points.length)
+          item.points = [
+            { cases: n(item.countCases), bottles: n(item.countBottles) },
+          ];
+        delete item.countCases;
+        delete item.countBottles;
+        delete item.location;
+      }
       function load() {
         try {
           const saved = JSON.parse(localStorage.getItem(KEY));
           saved ? (state = { ...state, ...saved }) : migrate();
         } catch (e) {}
+        state.room.forEach(normalize);
+        state.floor.forEach(normalize);
         state.room.sort(sortLiquor);
         state.floor.sort(sortLiquor);
         state.countPeriod = countPeriod();
@@ -658,15 +715,12 @@
                 name: item.name,
                 room: 0,
                 floor: 0,
-                roomLocation: "",
-                floorLocation: "",
                 system: 0,
                 salesCases: 0,
                 salesBottles: 0,
               });
             const product = products.get(key);
             product[z] += physical(item);
-            product[`${z}Location`] = item.location || "";
             product.system += n(item.system);
             product.salesCases += n(item.salesCases);
             product.salesBottles += n(item.salesBottles);
@@ -679,13 +733,7 @@
               const actual = item.room + item.floor;
               const caseSales = item.salesCases * CASE;
               const netDifference = actual + caseSales - item.system;
-              const roomLabel = item.roomLocation
-                ? `Stockroom (${item.roomLocation}) ${f(item.room)}`
-                : `Stockroom ${f(item.room)}`;
-              const floorLabel = item.floorLocation
-                ? `Sales Floor (${item.floorLocation}) ${f(item.floor)}`
-                : `Sales Floor ${f(item.floor)}`;
-              return `▸ ${item.name}\n  ${roomLabel} • ${floorLabel}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
+              return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
             },
           )
           .join("\n\n");
@@ -718,8 +766,7 @@
         ["floor", "room"].forEach((z) =>
           state[z].forEach((x) =>
             Object.assign(x, {
-              countCases: 0,
-              countBottles: 0,
+              points: [{ cases: 0, bottles: 0 }],
               system: 0,
               salesCases: 0,
               salesBottles: 0,
