@@ -155,6 +155,21 @@
         color: var(--muted);
         font-size: 11px;
       }
+      .location {
+        display: block;
+        width: 100%;
+        margin-top: 6px;
+        padding: 5px 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfdfe;
+        color: var(--ink);
+        font: inherit;
+        font-size: 12px;
+      }
+      .location::placeholder {
+        color: #9fb1bb;
+      }
       .badge {
         padding: 5px 8px;
         height: max-content;
@@ -403,6 +418,7 @@
           <div>
             <div class="name"></div>
             <div class="barcode"></div>
+            <input class="location" placeholder="จุดที่วางสินค้า เช่น จุดที่ 1" />
           </div>
           <div class="badge"></div>
         </div>
@@ -423,6 +439,7 @@
         ].map(([name, barcode]) => ({
           name,
           barcode,
+          location: "",
           countCases: 0,
           countBottles: 0,
           system: 0,
@@ -475,6 +492,7 @@
             state[to] = old[from].map((x) => ({
               name: x.product || "ไม่ระบุสินค้า",
               barcode: x.barcode || "",
+              location: "",
               countCases: n(x.cases),
               countBottles: n(x.bottles),
               system: n(x.system),
@@ -529,6 +547,12 @@
           card.querySelector(".name").textContent = item.name;
           card.querySelector(".barcode").textContent =
             item.barcode || "ไม่มีบาร์โค้ด";
+          const locationInput = card.querySelector(".location");
+          locationInput.value = item.location || "";
+          locationInput.addEventListener("input", (e) => {
+            item.location = e.target.value;
+            save();
+          });
           const badge = card.querySelector(".badge"),
             entry = card.querySelector(".entry"),
             overview = card.querySelector(".overview");
@@ -600,9 +624,11 @@
         const name = prompt("ชื่อสินค้า");
         if (!name) return;
         const barcode = prompt("บาร์โค้ด (เว้นว่างได้)") || "";
+        const location = prompt("จุดที่วางสินค้า เช่น จุดที่ 1 (เว้นว่างได้)") || "";
         state[zone].push({
           name,
           barcode,
+          location,
           countCases: 0,
           countBottles: 0,
           system: 0,
@@ -632,12 +658,15 @@
                 name: item.name,
                 room: 0,
                 floor: 0,
+                roomLocation: "",
+                floorLocation: "",
                 system: 0,
                 salesCases: 0,
                 salesBottles: 0,
               });
             const product = products.get(key);
             product[z] += physical(item);
+            product[`${z}Location`] = item.location || "";
             product.system += n(item.system);
             product.salesCases += n(item.salesCases);
             product.salesBottles += n(item.salesBottles);
@@ -650,7 +679,13 @@
               const actual = item.room + item.floor;
               const caseSales = item.salesCases * CASE;
               const netDifference = actual + caseSales - item.system;
-              return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
+              const roomLabel = item.roomLocation
+                ? `Stockroom (${item.roomLocation}) ${f(item.room)}`
+                : `Stockroom ${f(item.room)}`;
+              const floorLabel = item.floorLocation
+                ? `Sales Floor (${item.floorLocation}) ${f(item.floor)}`
+                : `Sales Floor ${f(item.floor)}`;
+              return `▸ ${item.name}\n  ${roomLabel} • ${floorLabel}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
             },
           )
           .join("\n\n");
