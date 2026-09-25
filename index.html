@@ -416,6 +416,10 @@
         </div>
         <div class="summary-grid">
           <div class="s-card">
+            <span>ยอดรวม (ระบบ+นับทุกจุด)</span
+            ><strong id="combined">0 ขวด</strong>
+          </div>
+          <div class="s-card">
             <span>ยอดในระบบ</span><strong id="system">0 ขวด</strong>
           </div>
           <div class="s-card">
@@ -553,6 +557,7 @@
       function metrics(item) {
         const d = physical(item) + caseSales(item) - n(item.system);
         return [
+          ["ยอดรวม (ระบบ+นับทุกจุด)", `${f(n(item.system) + physical(item))} ขวด`],
           ["ยอดในระบบ", `${f(n(item.system))} ขวด`],
           ["ยอดขาย", `${f(sold(item))} ขวด`],
           ["ตรวจจริง", `${f(physical(item))} ขวด`],
@@ -639,7 +644,7 @@
             );
           }
           if (mode === "total") {
-            badge.textContent = `${f(physical(item))} ขวด`;
+            badge.textContent = `${f(n(item.system) + physical(item))} ขวด`;
             overview.innerHTML = metrics(item);
           }
           list.append(card);
@@ -655,6 +660,7 @@
           sales = all(sold),
           diff = actual + all(caseSales) - system;
         $("#actual").textContent = `${f(actual)} ขวด`;
+        $("#combined").textContent = `${f(system + actual)} ขวด`;
         $("#system").textContent = `${f(system)} ขวด`;
         $("#sales").textContent = `${f(sales)} ขวด`;
         $("#diff").textContent = `${sg(diff)} ขวด`;
