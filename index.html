@@ -440,7 +440,7 @@
           <span>วันที่ตรวจนับ</span><input id="date" type="date" />
         </div>
       </header>
-      <nav class="zone-tabs">
+      <nav id="zoneTabs" class="zone-tabs">
         <button class="tab active" data-zone="room">Stockroom</button
         ><button class="tab" data-zone="floor">Sales Floor</button>
       </nav>
@@ -604,13 +604,14 @@
         wrap.append(lab, input);
         return wrap;
       }
-      function metrics(item) {
-        const d = physical(item) + caseSales(item) - n(item.system);
+      function metrics(stats) {
+        const soldTotal = stats.salesCases * CASE + stats.salesBottles,
+          d = stats.physical + stats.salesCases * CASE - stats.system;
         return [
-          ["รวม", `${f(n(item.system) + physical(item))} ขวด`],
-          ["ระบบ", `${f(n(item.system))} ขวด`],
-          ["ขาย", `${f(sold(item))} ขวด`],
-          ["ตรวจจริง", `${f(physical(item))} ขวด`],
+          ["รวม", `${f(stats.system + stats.physical)} ขวด`],
+          ["ระบบ", `${f(stats.system)} ขวด`],
+          ["ขาย", `${f(soldTotal)} ขวด`],
+          ["ตรวจจริง", `${f(stats.physical)} ขวด`],
           ["ผลต่าง", `${sg(d)} ขวด`, d],
         ]
           .map(
@@ -619,11 +620,37 @@
           )
           .join("");
       }
+      function aggregateProducts() {
+        const products = new Map();
+        ["room", "floor"].forEach((z) =>
+          state[z].forEach((item) => {
+            const key = item.barcode || item.name;
+            if (!products.has(key))
+              products.set(key, {
+                name: item.name,
+                barcode: item.barcode,
+                room: 0,
+                floor: 0,
+                system: 0,
+                salesCases: 0,
+                salesBottles: 0,
+              });
+            const product = products.get(key);
+            product[z] += physical(item);
+            product.system += n(item.system);
+            product.salesCases += n(item.salesCases);
+            product.salesBottles += n(item.salesBottles);
+          }),
+        );
+        return [...products.values()].sort(sortLiquor);
+      }
       function render() {
         const list = $("#list");
         list.innerHTML = "";
         list.classList.toggle("compact", mode === "total");
-        state[zone].forEach((item, i) => {
+        $("#zoneTabs").style.display = mode === "total" ? "none" : "grid";
+        const items = mode === "total" ? aggregateProducts() : state[zone];
+        items.forEach((item, i) => {
           const card = $("#card").content.firstElementChild.cloneNode(true);
           card.querySelector(".name").textContent = item.name;
           card.querySelector(".barcode").textContent =
@@ -695,8 +722,14 @@
             );
           }
           if (mode === "total") {
-            badge.textContent = `${f(n(item.system) + physical(item))} ขวด`;
-            overview.innerHTML = metrics(item);
+            const stats = {
+              physical: item.room + item.floor,
+              system: n(item.system),
+              salesCases: n(item.salesCases),
+              salesBottles: n(item.salesBottles),
+            };
+            badge.textContent = `${f(stats.system + stats.physical)} ขวด`;
+            overview.innerHTML = metrics(stats);
           }
           list.append(card);
         });
@@ -764,36 +797,13 @@
         render();
       }
       function productDetails() {
-        const products = new Map();
-        ["room", "floor"].forEach((z) =>
-          state[z].forEach((item) => {
-            const key = item.barcode || item.name;
-            if (!products.has(key))
-              products.set(key, {
-                name: item.name,
-                room: 0,
-                floor: 0,
-                system: 0,
-                salesCases: 0,
-                salesBottles: 0,
-              });
-            const product = products.get(key);
-            product[z] += physical(item);
-            product.system += n(item.system);
-            product.salesCases += n(item.salesCases);
-            product.salesBottles += n(item.salesBottles);
-          }),
-        );
-        return [...products.values()]
-          .sort(sortLiquor)
-          .map(
-            (item) => {
-              const actual = item.room + item.floor;
-              const caseSales = item.salesCases * CASE;
-              const netDifference = actual + caseSales - item.system;
-              return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
-            },
-          )
+        return aggregateProducts()
+          .map((item) => {
+            const actual = item.room + item.floor;
+            const caseSales = item.salesCases * CASE;
+            const netDifference = actual + caseSales - item.system;
+            return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
+          })
           .join("\n\n");
       }
       document.querySelectorAll("[data-zone]").forEach((b) =>
@@ -832,10 +842,9 @@
         canvas.toBlob((blob) => {
           if (!blob) return;
           const url = URL.createObjectURL(blob),
-            zoneLabel = zone === "room" ? "Stockroom" : "SalesFloor",
             a = document.createElement("a");
           a.href = url;
-          a.download = `สรุปยอดรวม-${zoneLabel}-${state.date}.png`;
+          a.download = `สรุปยอดรวม-${state.date}.png`;
           document.body.append(a);
           a.click();
           a.remove();
