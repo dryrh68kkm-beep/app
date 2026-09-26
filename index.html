@@ -397,7 +397,7 @@
       }
       .list.compact .overview {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 4px;
         margin-top: 6px;
       }
@@ -464,10 +464,6 @@
           <span>ยอดตรวจจริงรวม</span><strong id="actual">0 ขวด</strong>
         </div>
         <div class="summary-grid">
-          <div class="s-card">
-            <span>ยอดรวม (ระบบ+นับทุกจุด)</span
-            ><strong id="combined">0 ขวด</strong>
-          </div>
           <div class="s-card">
             <span>ยอดในระบบ</span><strong id="system">0 ขวด</strong>
           </div>
@@ -608,10 +604,9 @@
         const soldTotal = stats.salesCases * CASE + stats.salesBottles,
           d = stats.physical + stats.salesCases * CASE - stats.system;
         return [
-          ["รวม", `${f(stats.system + stats.physical)} ขวด`],
           ["ระบบ", `${f(stats.system)} ขวด`],
           ["ขาย", `${f(soldTotal)} ขวด`],
-          ["ตรวจจริง", `${f(stats.physical)} ขวด`],
+          ["รวม (ตรวจจริง)", `${f(stats.physical)} ขวด`],
           ["ผลต่าง", `${sg(d)} ขวด`, d],
         ]
           .map(
@@ -728,7 +723,7 @@
               salesCases: n(item.salesCases),
               salesBottles: n(item.salesBottles),
             };
-            badge.textContent = `${f(stats.system + stats.physical)} ขวด`;
+            badge.textContent = `${f(stats.physical)} ขวด`;
             overview.innerHTML = metrics(stats);
           }
           list.append(card);
@@ -745,7 +740,6 @@
           sales = all(sold),
           diff = actual + all(caseSales) - system;
         $("#actual").textContent = `${f(actual)} ขวด`;
-        $("#combined").textContent = `${f(system + actual)} ขวด`;
         $("#system").textContent = `${f(system)} ขวด`;
         $("#sales").textContent = `${f(sales)} ขวด`;
         $("#diff").textContent = `${sg(diff)} ขวด`;
