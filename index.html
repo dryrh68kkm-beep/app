@@ -370,12 +370,52 @@
       .toast.show {
         display: block;
       }
+      .list.compact {
+        gap: 6px;
+      }
+      .list.compact .card {
+        padding: 9px 11px;
+      }
+      .list.compact .top {
+        gap: 8px;
+      }
+      .list.compact .barcode {
+        display: none;
+      }
+      .list.compact .name {
+        font-size: 13px;
+      }
+      .list.compact .badge {
+        padding: 4px 7px;
+        font-size: 11px;
+      }
+      .list.compact .overview {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+        margin-top: 6px;
+      }
+      .list.compact .metric {
+        padding: 5px 3px;
+        border-radius: 7px;
+        text-align: center;
+      }
+      .list.compact .metric span {
+        font-size: 8px;
+      }
+      .list.compact .metric strong {
+        margin-top: 1px;
+        font-size: 11px;
+      }
       @media (min-width: 640px) {
         .app {
           padding-top: 26px;
         }
         .list {
           grid-template-columns: 1fr 1fr;
+        }
+        .list.compact {
+          grid-template-columns: 1fr;
         }
         .zone-total,
         .summary {
@@ -557,11 +597,11 @@
       function metrics(item) {
         const d = physical(item) + caseSales(item) - n(item.system);
         return [
-          ["ยอดรวม (ระบบ+นับทุกจุด)", `${f(n(item.system) + physical(item))} ขวด`],
-          ["ยอดในระบบ", `${f(n(item.system))} ขวด`],
-          ["ยอดขาย", `${f(sold(item))} ขวด`],
+          ["รวม", `${f(n(item.system) + physical(item))} ขวด`],
+          ["ระบบ", `${f(n(item.system))} ขวด`],
+          ["ขาย", `${f(sold(item))} ขวด`],
           ["ตรวจจริง", `${f(physical(item))} ขวด`],
-          ["ผลต่างสุทธิ", `${sg(d)} ขวด`, d],
+          ["ผลต่าง", `${sg(d)} ขวด`, d],
         ]
           .map(
             ([a, b, d]) =>
@@ -572,6 +612,7 @@
       function render() {
         const list = $("#list");
         list.innerHTML = "";
+        list.classList.toggle("compact", mode === "total");
         state[zone].forEach((item, i) => {
           const card = $("#card").content.firstElementChild.cloneNode(true);
           card.querySelector(".name").textContent = item.name;
