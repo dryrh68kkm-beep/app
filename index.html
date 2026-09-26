@@ -352,6 +352,12 @@
         background: #f1fbfc;
         font: 800 14px inherit;
       }
+      .add.capture {
+        border-style: solid;
+        border-color: transparent;
+        color: #fff;
+        background: linear-gradient(135deg, #168bd4, #159f9b);
+      }
       .toast {
         position: fixed;
         left: 50%;
@@ -447,6 +453,9 @@
       <section id="work">
         <div id="list" class="list"></div>
         <button id="add" class="add">+ เพิ่มสินค้า</button>
+        <button id="capture" class="add capture" style="display: none">
+          📷 บันทึกภาพสรุปทั้งหมด
+        </button>
       </section>
       <section class="summary">
         <h2>สรุปยอดทั้งหมด</h2>
@@ -494,6 +503,7 @@
         <div class="entry"></div>
         <div class="overview"></div></article
     ></template>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
       const CASE = 12,
         KEY = "liquor-count-categories-v3",
@@ -691,6 +701,7 @@
           list.append(card);
         });
         $("#add").style.display = mode === "total" ? "none" : "block";
+        $("#capture").style.display = mode === "total" ? "block" : "none";
         update();
       }
       function update() {
@@ -808,6 +819,30 @@
         save();
       });
       $("#add").addEventListener("click", add);
+      $("#capture").addEventListener("click", async () => {
+        if (typeof html2canvas === "undefined") {
+          toast("โหลดเครื่องมือแคปไม่สำเร็จ");
+          return;
+        }
+        toast("กำลังจับภาพ...");
+        const canvas = await html2canvas($("#list"), {
+          backgroundColor: "#f5fbfd",
+          scale: 2,
+        });
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob),
+            zoneLabel = zone === "room" ? "Stockroom" : "SalesFloor",
+            a = document.createElement("a");
+          a.href = url;
+          a.download = `สรุปยอดรวม-${zoneLabel}-${state.date}.png`;
+          document.body.append(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          toast("บันทึกภาพแล้ว");
+        });
+      });
       $("#reset").addEventListener("click", () => {
         if (!confirm("ล้างตัวเลขทั้งหมดใช่หรือไม่?")) return;
         ["floor", "room"].forEach((z) =>
