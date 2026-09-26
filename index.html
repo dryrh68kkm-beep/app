@@ -397,7 +397,7 @@
       }
       .list.compact .overview {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 4px;
         margin-top: 6px;
       }
@@ -606,7 +606,6 @@
         return [
           ["ระบบ", `${f(stats.system)} ขวด`],
           ["ขาย", `${f(soldTotal)} ขวด`],
-          ["รวม (ตรวจจริง)", `${f(stats.physical)} ขวด`],
           ["ผลต่าง", `${sg(d)} ขวด`, d],
         ]
           .map(
