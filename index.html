@@ -786,6 +786,7 @@
         state.floor.forEach(normalize);
         state.room.sort(sortLiquor);
         state.floor.sort(sortLiquor);
+        state.date = new Date().toISOString().slice(0, 10);
         state.countPeriod = countPeriod();
         $("#date").value = state.date;
         render();
