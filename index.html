@@ -515,9 +515,6 @@
           name,
           barcode,
           points: [{ cases: 0, bottles: 0 }],
-          system: 0,
-          salesCases: 0,
-          salesBottles: 0,
         }));
       const $ = (s) => document.querySelector(s),
         n = (x) => Math.max(0, Number(x) || 0),
@@ -544,16 +541,38 @@
           date: new Date().toISOString().slice(0, 10),
           floor: structuredClone(MASTER),
           room: structuredClone(MASTER),
+          shared: Object.fromEntries(
+            MASTER.map((m) => [
+              m.barcode || m.name,
+              { system: 0, salesCases: 0, salesBottles: 0 },
+            ]),
+          ),
         };
+      function keyOf(x) {
+        return x.barcode || x.name;
+      }
+      function sharedRecord(key) {
+        if (!state.shared[key])
+          state.shared[key] = { system: 0, salesCases: 0, salesBottles: 0 };
+        return state.shared[key];
+      }
+      function sharedTotals() {
+        let system = 0,
+          salesCases = 0,
+          salesBottles = 0;
+        Object.values(state.shared).forEach((r) => {
+          system += n(r.system);
+          salesCases += n(r.salesCases);
+          salesBottles += n(r.salesBottles);
+        });
+        return { system, salesCases, salesBottles };
+      }
       const physical = (x) =>
           (x.points || []).reduce(
             (a, p) => a + n(p.cases) * CASE + n(p.bottles),
             0,
           ),
-        caseSales = (x) => n(x.salesCases) * CASE,
-        sold = (x) => n(x.salesCases) * CASE + n(x.salesBottles),
         sum = (z, key) => state[z].reduce((a, x) => a + key(x), 0),
-        all = (key) => sum("floor", key) + sum("room", key),
         save = () => localStorage.setItem(KEY, JSON.stringify(state));
       function migrate() {
         let old;
@@ -566,14 +585,18 @@
           ["back", "room"],
         ].forEach(([from, to]) => {
           if (Array.isArray(old[from]) && old[from].length)
-            state[to] = old[from].map((x) => ({
-              name: x.product || "ไม่ระบุสินค้า",
-              barcode: x.barcode || "",
-              points: [{ cases: n(x.cases), bottles: n(x.bottles) }],
-              system: n(x.system),
-              salesCases: n(x.soldCases),
-              salesBottles: n(x.soldBottles),
-            }));
+            state[to] = old[from].map((x) => {
+              const key = x.barcode || x.product || "ไม่ระบุสินค้า",
+                rec = sharedRecord(key);
+              rec.system = Math.max(rec.system, n(x.system));
+              rec.salesCases = Math.max(rec.salesCases, n(x.soldCases));
+              rec.salesBottles = Math.max(rec.salesBottles, n(x.soldBottles));
+              return {
+                name: x.product || "ไม่ระบุสินค้า",
+                barcode: x.barcode || "",
+                points: [{ cases: n(x.cases), bottles: n(x.bottles) }],
+              };
+            });
         });
         state.date = old.date || state.date;
       }
@@ -619,32 +642,46 @@
         const products = new Map();
         ["room", "floor"].forEach((z) =>
           state[z].forEach((item) => {
-            const key = item.barcode || item.name;
-            if (!products.has(key))
+            const key = keyOf(item);
+            if (!products.has(key)) {
+              const rec = sharedRecord(key);
               products.set(key, {
                 name: item.name,
                 barcode: item.barcode,
                 room: 0,
                 floor: 0,
-                system: 0,
-                salesCases: 0,
-                salesBottles: 0,
+                system: n(rec.system),
+                salesCases: n(rec.salesCases),
+                salesBottles: n(rec.salesBottles),
               });
-            const product = products.get(key);
-            product[z] += physical(item);
-            product.system += n(item.system);
-            product.salesCases += n(item.salesCases);
-            product.salesBottles += n(item.salesBottles);
+            }
+            products.get(key)[z] += physical(item);
           }),
         );
         return [...products.values()].sort(sortLiquor);
+      }
+      function uniqueProducts() {
+        const seen = new Map();
+        ["room", "floor"].forEach((z) =>
+          state[z].forEach((item) => {
+            const key = keyOf(item);
+            if (!seen.has(key))
+              seen.set(key, { name: item.name, barcode: item.barcode });
+          }),
+        );
+        return [...seen.values()].sort(sortLiquor);
       }
       function render() {
         const list = $("#list");
         list.innerHTML = "";
         list.classList.toggle("compact", mode === "total");
-        $("#zoneTabs").style.display = mode === "total" ? "none" : "grid";
-        const items = mode === "total" ? aggregateProducts() : state[zone];
+        $("#zoneTabs").style.display = mode === "count" ? "grid" : "none";
+        const items =
+          mode === "total"
+            ? aggregateProducts()
+            : mode === "system" || mode === "sales"
+              ? uniqueProducts()
+              : state[zone];
         items.forEach((item, i) => {
           const card = $("#card").content.firstElementChild.cloneNode(true);
           card.querySelector(".name").textContent = item.name;
@@ -695,24 +732,26 @@
             entry.append(pointsWrap, addPointBtn);
           }
           if (mode === "system") {
-            badge.textContent = `${f(n(item.system))} ขวด`;
+            const rec = sharedRecord(keyOf(item));
+            badge.textContent = `${f(n(rec.system))} ขวด`;
             entry.className = "entry one";
             entry.append(
-              field("ยอดในระบบ (ขวด)", item.system, (v) => (item.system = v)),
+              field("ยอดในระบบ (ขวด)", rec.system, (v) => (rec.system = v)),
             );
           }
           if (mode === "sales") {
-            badge.textContent = `${f(sold(item))} ขวด`;
+            const rec = sharedRecord(keyOf(item));
+            badge.textContent = `${f(n(rec.salesCases) * CASE + n(rec.salesBottles))} ขวด`;
             entry.append(
               field(
                 "ขายไป (ลัง)",
-                item.salesCases,
-                (v) => (item.salesCases = v),
+                rec.salesCases,
+                (v) => (rec.salesCases = v),
               ),
               field(
                 "ขายไป (ขวด)",
-                item.salesBottles,
-                (v) => (item.salesBottles = v),
+                rec.salesBottles,
+                (v) => (rec.salesBottles = v),
               ),
             );
           }
@@ -736,9 +775,9 @@
         const floor = sum("floor", physical),
           room = sum("room", physical),
           actual = floor + room,
-          system = all((x) => n(x.system)),
-          sales = all(sold),
-          diff = actual + all(caseSales) - system;
+          { system, salesCases, salesBottles } = sharedTotals(),
+          sales = salesCases * CASE + salesBottles,
+          diff = actual + salesCases * CASE - system;
         $("#actual").textContent = `${f(actual)} ขวด`;
         $("#system").textContent = `${f(system)} ขวด`;
         $("#sales").textContent = `${f(sales)} ขวด`;
@@ -762,10 +801,8 @@
           name,
           barcode,
           points: [{ cases: 0, bottles: 0 }],
-          system: 0,
-          salesCases: 0,
-          salesBottles: 0,
         });
+        sharedRecord(barcode || name);
         render();
       }
       function normalize(item) {
@@ -773,15 +810,26 @@
           item.points = [
             { cases: n(item.countCases), bottles: n(item.countBottles) },
           ];
+        const rec = sharedRecord(keyOf(item));
+        if (item.system !== undefined)
+          rec.system = Math.max(rec.system, n(item.system));
+        if (item.salesCases !== undefined)
+          rec.salesCases = Math.max(rec.salesCases, n(item.salesCases));
+        if (item.salesBottles !== undefined)
+          rec.salesBottles = Math.max(rec.salesBottles, n(item.salesBottles));
         delete item.countCases;
         delete item.countBottles;
         delete item.location;
+        delete item.system;
+        delete item.salesCases;
+        delete item.salesBottles;
       }
       function load() {
         try {
           const saved = JSON.parse(localStorage.getItem(KEY));
           saved ? (state = { ...state, ...saved }) : migrate();
         } catch (e) {}
+        state.shared = state.shared || {};
         state.room.forEach(normalize);
         state.floor.forEach(normalize);
         state.room.sort(sortLiquor);
@@ -851,13 +899,11 @@
         if (!confirm("ล้างตัวเลขทั้งหมดใช่หรือไม่?")) return;
         ["floor", "room"].forEach((z) =>
           state[z].forEach((x) =>
-            Object.assign(x, {
-              points: [{ cases: 0, bottles: 0 }],
-              system: 0,
-              salesCases: 0,
-              salesBottles: 0,
-            }),
+            Object.assign(x, { points: [{ cases: 0, bottles: 0 }] }),
           ),
+        );
+        Object.values(state.shared).forEach((rec) =>
+          Object.assign(rec, { system: 0, salesCases: 0, salesBottles: 0 }),
         );
         render();
         toast("ล้างข้อมูลแล้ว");
@@ -866,10 +912,8 @@
         const floor = sum("floor", physical),
           room = sum("room", physical),
           actual = floor + room,
-          system = all((x) => n(x.system)),
-          salesCases = all((x) => n(x.salesCases)),
-          salesBottles = all((x) => n(x.salesBottles)),
-          sales = all(sold),
+          { system, salesCases, salesBottles } = sharedTotals(),
+          sales = salesCases * CASE + salesBottles,
           netDifference = actual + salesCases * CASE - system,
           date = new Date(`${state.date}T00:00:00`).toLocaleDateString(
             "th-TH",
