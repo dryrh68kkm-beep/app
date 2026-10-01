@@ -505,25 +505,28 @@
         KEY = "liquor-count-categories-v3",
         OLD = "liquor-count-v1",
         MASTER = [
-          ["หงส์ทอง 200 มล.", "8852388000767"],
-          ["หงส์ทอง 35 ดีกรี 350 ซีซี", "8852388000620"],
-          ["หงส์ทอง 35 ดีกรี 700 ซีซี", "8852388000613"],
-          ["แสงโสม 200 มล.", "8851707000198"],
-          ["แสงโสมเหรียญทอง 300 ซีซี", "8851707000174"],
-          ["แสงโสมเหรียญทอง 700 ซีซี", "8851707000181"],
-        ].map(([name, barcode]) => ({
+          ["หงส์ทอง 200 มล.", "8852388000767", 24],
+          ["หงส์ทอง 35 ดีกรี 350 ซีซี", "8852388000620", 12],
+          ["หงส์ทอง 35 ดีกรี 700 ซีซี", "8852388000613", 12],
+          ["แสงโสม 200 มล.", "8851707000198", 24],
+          ["แสงโสมเหรียญทอง 300 ซีซี", "8851707000174", 12],
+          ["แสงโสมเหรียญทอง 700 ซีซี", "8851707000181", 12],
+        ].map(([name, barcode, perCase]) => ({
           name,
           barcode,
+          perCase,
           points: [{ cases: 0, bottles: 0 }],
-        }));
+        })),
+        MASTER_CASE = new Map(
+          MASTER.map((m) => [m.barcode || m.name, m.perCase]),
+        );
       const $ = (s) => document.querySelector(s),
         n = (x) => Math.max(0, Number(x) || 0),
         f = (x) => new Intl.NumberFormat("th-TH").format(x),
         sg = (x) => `${x > 0 ? "+" : ""}${f(x)}`,
-        saleBreakdown = (cases, bottles) => {
+        saleBreakdown = (cases, bottles, total) => {
           const caseCount = n(cases),
-            bottleCount = n(bottles),
-            total = caseCount * CASE + bottleCount;
+            bottleCount = n(bottles);
           return `${f(caseCount)} ลัง ${f(bottleCount)} ขวด (${f(total)} ขวด)`;
         },
         liquorGroup = (name) =>
@@ -558,18 +561,31 @@
       }
       function sharedTotals() {
         let system = 0,
-          salesCases = 0,
-          salesBottles = 0;
-        Object.values(state.shared).forEach((r) => {
-          system += n(r.system);
-          salesCases += n(r.salesCases);
-          salesBottles += n(r.salesBottles);
+          salesCasesRaw = 0,
+          salesBottlesRaw = 0,
+          soldBottles = 0,
+          caseSalesBottles = 0;
+        uniqueProducts().forEach((p) => {
+          const rec = sharedRecord(keyOf(p)),
+            perCase = p.perCase || CASE,
+            caseBottles = n(rec.salesCases) * perCase;
+          system += n(rec.system);
+          salesCasesRaw += n(rec.salesCases);
+          salesBottlesRaw += n(rec.salesBottles);
+          caseSalesBottles += caseBottles;
+          soldBottles += caseBottles + n(rec.salesBottles);
         });
-        return { system, salesCases, salesBottles };
+        return {
+          system,
+          salesCasesRaw,
+          salesBottlesRaw,
+          soldBottles,
+          caseSalesBottles,
+        };
       }
       const physical = (x) =>
           (x.points || []).reduce(
-            (a, p) => a + n(p.cases) * CASE + n(p.bottles),
+            (a, p) => a + n(p.cases) * (x.perCase || CASE) + n(p.bottles),
             0,
           ),
         sum = (z, key) => state[z].reduce((a, x) => a + key(x), 0),
@@ -594,6 +610,7 @@
               return {
                 name: x.product || "ไม่ระบุสินค้า",
                 barcode: x.barcode || "",
+                perCase: MASTER_CASE.get(key) || CASE,
                 points: [{ cases: n(x.cases), bottles: n(x.bottles) }],
               };
             });
@@ -624,8 +641,9 @@
         return wrap;
       }
       function metrics(stats) {
-        const soldTotal = stats.salesCases * CASE + stats.salesBottles,
-          d = stats.physical + stats.salesCases * CASE - stats.system;
+        const perCase = stats.perCase || CASE,
+          soldTotal = stats.salesCases * perCase + stats.salesBottles,
+          d = stats.physical + stats.salesCases * perCase - stats.system;
         return [
           ["ระบบ", `${f(stats.system)} ขวด`],
           ["ขาย", `${f(soldTotal)} ขวด`],
@@ -648,6 +666,7 @@
               products.set(key, {
                 name: item.name,
                 barcode: item.barcode,
+                perCase: item.perCase || CASE,
                 room: 0,
                 floor: 0,
                 system: n(rec.system),
@@ -666,7 +685,11 @@
           state[z].forEach((item) => {
             const key = keyOf(item);
             if (!seen.has(key))
-              seen.set(key, { name: item.name, barcode: item.barcode });
+              seen.set(key, {
+                name: item.name,
+                barcode: item.barcode,
+                perCase: item.perCase || CASE,
+              });
           }),
         );
         return [...seen.values()].sort(sortLiquor);
@@ -704,7 +727,11 @@
               const fields = document.createElement("div");
               fields.className = "point-fields";
               fields.append(
-                field("จำนวนลัง", p.cases, (v) => (p.cases = v)),
+                field(
+                  `จำนวนลัง (ลังละ ${item.perCase || CASE} ขวด)`,
+                  p.cases,
+                  (v) => (p.cases = v),
+                ),
                 field("จำนวนขวด", p.bottles, (v) => (p.bottles = v)),
               );
               row.append(label, fields);
@@ -740,11 +767,12 @@
             );
           }
           if (mode === "sales") {
-            const rec = sharedRecord(keyOf(item));
-            badge.textContent = `${f(n(rec.salesCases) * CASE + n(rec.salesBottles))} ขวด`;
+            const rec = sharedRecord(keyOf(item)),
+              perCase = item.perCase || CASE;
+            badge.textContent = `${f(n(rec.salesCases) * perCase + n(rec.salesBottles))} ขวด`;
             entry.append(
               field(
-                "ขายไป (ลัง)",
+                `ขายไป (ลัง ${perCase} ขวด)`,
                 rec.salesCases,
                 (v) => (rec.salesCases = v),
               ),
@@ -761,6 +789,7 @@
               system: n(item.system),
               salesCases: n(item.salesCases),
               salesBottles: n(item.salesBottles),
+              perCase: item.perCase,
             };
             badge.textContent = `${f(stats.physical)} ขวด`;
             overview.innerHTML = metrics(stats);
@@ -775,9 +804,9 @@
         const floor = sum("floor", physical),
           room = sum("room", physical),
           actual = floor + room,
-          { system, salesCases, salesBottles } = sharedTotals(),
-          sales = salesCases * CASE + salesBottles,
-          diff = actual + salesCases * CASE - system;
+          { system, soldBottles, caseSalesBottles } = sharedTotals(),
+          sales = soldBottles,
+          diff = actual + caseSalesBottles - system;
         $("#actual").textContent = `${f(actual)} ขวด`;
         $("#system").textContent = `${f(system)} ขวด`;
         $("#sales").textContent = `${f(sales)} ขวด`;
@@ -797,9 +826,11 @@
         const name = prompt("ชื่อสินค้า");
         if (!name) return;
         const barcode = prompt("บาร์โค้ด (เว้นว่างได้)") || "";
+        const perCase = n(prompt("จำนวนขวดต่อลัง (ค่าเริ่มต้น 12)", "12")) || CASE;
         state[zone].push({
           name,
           barcode,
+          perCase,
           points: [{ cases: 0, bottles: 0 }],
         });
         sharedRecord(barcode || name);
@@ -810,6 +841,8 @@
           item.points = [
             { cases: n(item.countCases), bottles: n(item.countBottles) },
           ];
+        if (!item.perCase)
+          item.perCase = MASTER_CASE.get(keyOf(item)) || CASE;
         const rec = sharedRecord(keyOf(item));
         if (item.system !== undefined)
           rec.system = Math.max(rec.system, n(item.system));
@@ -842,10 +875,12 @@
       function productDetails() {
         return aggregateProducts()
           .map((item) => {
+            const perCase = item.perCase || CASE;
             const actual = item.room + item.floor;
-            const caseSales = item.salesCases * CASE;
+            const caseSales = item.salesCases * perCase;
+            const soldTotal = caseSales + item.salesBottles;
             const netDifference = actual + caseSales - item.system;
-            return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
+            return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles, soldTotal)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
           })
           .join("\n\n");
       }
@@ -912,14 +947,15 @@
         const floor = sum("floor", physical),
           room = sum("room", physical),
           actual = floor + room,
-          { system, salesCases, salesBottles } = sharedTotals(),
-          sales = salesCases * CASE + salesBottles,
-          netDifference = actual + salesCases * CASE - system,
+          { system, salesCasesRaw, salesBottlesRaw, soldBottles, caseSalesBottles } =
+            sharedTotals(),
+          sales = soldBottles,
+          netDifference = actual + caseSalesBottles - system,
           date = new Date(`${state.date}T00:00:00`).toLocaleDateString(
             "th-TH",
             { year: "numeric", month: "long", day: "numeric" },
           ),
-          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${saleBreakdown(salesCases, salesBottles)}\nผลต่างสุทธิ (ตรวจ+ขายลัง−ระบบ) ${sg(netDifference)} ขวด`;
+          text = `📋 สรุปตรวจนับสุรา\n🕘 ${state.countPeriod || countPeriod()} | 📅 ${date}\n━━━━━━━━━━━━\n${productDetails()}\n━━━━━━━━━━━━\n📌 สรุปรวม\nตรวจจริง ${f(actual)} ขวด | ระบบ ${f(system)} ขวด\nยอดขาย ${saleBreakdown(salesCasesRaw, salesBottlesRaw, sales)}\nผลต่างสุทธิ (ตรวจ+ขายลัง−ระบบ) ${sg(netDifference)} ขวด`;
         navigator.clipboard?.writeText(text);
         toast("คัดลอกสรุปแล้ว กำลังเปิด LINE");
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
