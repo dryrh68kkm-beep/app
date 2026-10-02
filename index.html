@@ -880,7 +880,7 @@
             const caseSales = item.salesCases * perCase;
             const soldTotal = caseSales + item.salesBottles;
             const netDifference = actual + caseSales - item.system;
-            return `▸ ${item.name}\n  Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)}\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles, soldTotal)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
+            return `▸ ${item.name}\n  ตรวจจริงรวม ${f(actual)} ขวด (Stockroom ${f(item.room)} • Sales Floor ${f(item.floor)})\n  ขาย ${saleBreakdown(item.salesCases, item.salesBottles, soldTotal)}\n  ระบบ ${f(item.system)} | ตรวจ+ขายลัง ${f(actual + caseSales)} | ต่างสุทธิ ${sg(netDifference)} ขวด`;
           })
           .join("\n\n");
       }
