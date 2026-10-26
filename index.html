@@ -358,6 +358,22 @@
         color: #fff;
         background: linear-gradient(135deg, #168bd4, #159f9b);
       }
+      .capture-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 9px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        color: #fff;
+        background: linear-gradient(135deg, #168bd4, #159f9b);
+        font-size: 13px;
+        font-weight: 800;
+      }
+      .capture-header span {
+        font-weight: 700;
+        opacity: 0.9;
+      }
       .toast {
         position: fixed;
         left: 50%;
@@ -839,7 +855,7 @@
           list.append(card);
         });
         $("#add").style.display = mode === "total" ? "none" : "block";
-        $("#capture").style.display = mode === "total" ? "block" : "none";
+        $("#capture").style.display = "block";
         update();
       }
       function update() {
@@ -955,16 +971,36 @@
           return;
         }
         toast("กำลังจับภาพ...");
-        const canvas = await html2canvas($("#list"), {
+        const modeLabel = {
+            count: "ตรวจนับ",
+            system: "ยอดในระบบ",
+            sales: "ยอดขาย",
+            total: "ยอดรวม",
+          }[mode] || "",
+          zoneLabel = zone === "room" ? "Stockroom" : "Sales Floor",
+          dateLabel = new Date(`${state.date}T00:00:00`).toLocaleDateString(
+            "th-TH",
+            { year: "numeric", month: "long", day: "numeric" },
+          ),
+          header = document.createElement("div");
+        header.className = "capture-header";
+        header.innerHTML = `<strong>${modeLabel}${mode === "total" ? "" : " • " + zoneLabel}</strong><span>${dateLabel}</span>`;
+        const work = $("#work");
+        work.insertBefore(header, $("#list"));
+        $("#add").style.display = "none";
+        $("#capture").style.display = "none";
+        const canvas = await html2canvas(work, {
           backgroundColor: "#f5fbfd",
           scale: 2,
         });
+        header.remove();
+        render();
         canvas.toBlob((blob) => {
           if (!blob) return;
           const url = URL.createObjectURL(blob),
             a = document.createElement("a");
           a.href = url;
-          a.download = `สรุปยอดรวม-${state.date}.png`;
+          a.download = `${modeLabel}-${mode === "total" ? "รวม" : zoneLabel}-${state.date}.png`;
           document.body.append(a);
           a.click();
           a.remove();
