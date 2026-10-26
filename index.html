@@ -413,6 +413,42 @@
         margin-top: 1px;
         font-size: 11px;
       }
+      .list.compact .entry {
+        margin-top: 8px;
+      }
+      .list.compact .points {
+        gap: 6px;
+      }
+      .list.compact .point {
+        padding-top: 6px;
+      }
+      .list.compact .point-label {
+        margin-bottom: 3px;
+        font-size: 10px;
+      }
+      .list.compact .point-fields {
+        gap: 6px;
+      }
+      .list.compact .field {
+        padding: 5px 8px;
+      }
+      .list.compact .field label {
+        font-size: 9px;
+        line-height: 1.25;
+      }
+      .list.compact .field input {
+        height: 24px;
+        font-size: 17px;
+      }
+      .list.compact .point-add {
+        margin-top: 2px;
+        padding: 7px;
+        font-size: 12px;
+      }
+      .list.compact .point-remove {
+        margin-top: 3px;
+        font-size: 11px;
+      }
       @media (min-width: 640px) {
         .app {
           padding-top: 26px;
@@ -697,7 +733,10 @@
       function render() {
         const list = $("#list");
         list.innerHTML = "";
-        list.classList.toggle("compact", mode === "total");
+        list.classList.toggle(
+          "compact",
+          mode === "total" || mode === "count",
+        );
         $("#zoneTabs").style.display = mode === "count" ? "grid" : "none";
         const items =
           mode === "total"
@@ -721,20 +760,23 @@
             item.points.forEach((p, pi) => {
               const row = document.createElement("div");
               row.className = "point";
-              const label = document.createElement("div");
-              label.className = "point-label";
-              label.textContent = `จุดที่ ${pi + 1}`;
               const fields = document.createElement("div");
               fields.className = "point-fields";
               fields.append(
                 field(
-                  `จำนวนลัง (ลังละ ${item.perCase || CASE} ขวด)`,
+                  `จำนวนลัง (${item.perCase || CASE} ขวด/ลัง)`,
                   p.cases,
                   (v) => (p.cases = v),
                 ),
                 field("จำนวนขวด", p.bottles, (v) => (p.bottles = v)),
               );
-              row.append(label, fields);
+              if (item.points.length > 1) {
+                const label = document.createElement("div");
+                label.className = "point-label";
+                label.textContent = `จุดที่ ${pi + 1}`;
+                row.append(label);
+              }
+              row.append(fields);
               if (item.points.length > 1) {
                 const removeBtn = document.createElement("button");
                 removeBtn.type = "button";
